@@ -16,9 +16,9 @@ static COUNTER counter;
     offset += strlen(buf + offset);
 #define EXTNM_IS_NOT(name) (strcmp(filepath+extpos, name))
 
-static void headers(u_int32_t content_len, const char* content_type, int no_cache) {
+static void headers(uint32_t content_len, const char* content_type, int no_cache) {
     char buf[1024];
-    u_int32_t offset = 0;
+    uint32_t offset = 0;
 
     ADD_HERDER(HTTP200 SERVER_STRING);
     if(no_cache) ADD_HERDER(CACHE_CTRL);
@@ -33,7 +33,7 @@ static void http_error(char* type, char* msg) {
 }
 
 static char* get_arg(char* query) {
-    u_int32_t len = 0;
+    uint32_t len = 0;
     while(query[len] && query[len] != '&') len++;
     if(len > 0) {
         char* name = malloc(len+1);
@@ -175,7 +175,7 @@ static int name_exist(char* name) {
 //Usage: cmoe method query_string
 int main(int argc, char **argv) {
     if(argc == 3) {
-        u_int32_t data_len = 0;
+        uint32_t data_len = 0;
         char* name = strstr(QS, "name=");
         items_len = align_struct(sizeof(COUNTER), 2, &counter.name, &counter.count);
         if(!items_len) http_error(HTTP500, "Align Struct Error.");
