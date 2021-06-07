@@ -33,7 +33,7 @@ static void http_error(char* type, char* msg) {
 }
 
 static char* get_arg(char* query) {
-    uint32_t len = 0;
+    int len = 0;
     while(query[len] && query[len] != '&') len++;
     if(len > 0) {
         char* name = malloc(len+1);
@@ -162,6 +162,8 @@ static int name_exist(char* name) {
             SIMPLE_PB *spb = get_pb(fp);
             COUNTER *d = (COUNTER *)spb->target;
             if (!strcmp(name, d->name)) {
+                free(spb);
+                fclose(fp);
                 return 1;
             }
             else free(spb);
@@ -175,7 +177,6 @@ static int name_exist(char* name) {
 //Usage: cmoe method query_string
 int main(int argc, char **argv) {
     if(argc == 3) {
-        uint32_t data_len = 0;
         char* name = strstr(QS, "name=");
         items_len = align_struct(sizeof(COUNTER), 2, &counter.name, &counter.count);
         if(!items_len) http_error(HTTP500, "Align Struct Error.");
@@ -190,7 +191,7 @@ int main(int argc, char **argv) {
                 if(reg) {
                     reg = get_arg(reg + 4);
                     if(reg) {
-                        if(strcmp(reg, "fumiama")) http_error(HTTP400, "Token Error.");
+                        if(strcmp(reg, TOKEN)) http_error(HTTP400, "Token Error.");
                         else if(!name_exist(name)) {
                             FILE* fp = fopen(DATFILE, "ab+");
                             if(fp) {
