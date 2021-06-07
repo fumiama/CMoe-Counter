@@ -1,0 +1,117 @@
+<html>
+    <head>
+        <title>Moe Counter!</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <link rel="icon" type="image/png" href="favicon.png"/>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/kognise/water.css@latest/dist/light.min.css"/>
+        <link rel="stylesheet" href="style.css"/>
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+        <script async="async" src="https://www.googletagmanager.com/gtag/js?id=G-2RLWN5JXRL"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag() {
+                dataLayer.push(arguments);
+            }
+            gtag('js', new Date());
+
+            gtag('config', 'G-2RLWN5JXRL');
+
+            function _evt_push(type, category, label) {
+                gtag('event', type, {
+                    'event_category': category,
+                    'event_label': label
+                });
+            }
+        </script>
+    </head>
+    <body>
+        <h3>How to use:</h3>
+        <h5>SVG address</h5>
+        <code>https://count.getloli.com/get/@:name</code>
+        <h5>Img tag</h5>
+        <code>&lt;img src="https://count.getloli.com/get/@:name" alt=":name" /></code>
+        <h5>Markdown</h5>
+        <code>![:name](https://count.getloli.com/get/@:name)</code>
+        <h3>
+            eg:<img src="https://count.getloli.com/get/@index" alt="Moe Count!"/>
+        </h3>
+        <i>
+            Data can access by anyone, please<span style="color: #ff4500;">DO NOT</span>
+            enter personal information
+        </i>
+        <details>
+            <summary style="display: inline-block;" onclick="_evt_push(&quot;click&quot;, &quot;normal&quot;, &quot;more_theme&quot;)">
+                <h3 style="display: inline-block; cursor: pointer;">More theme</h3>
+            </summary>
+            <p style="margin: 0;">
+                Just use the query parameters <code>theme</code>
+                , like this: <code>https://count.getloli.com/get/@:name?theme=moebooru</code>
+            </p>
+            <h5>moebooru</h5>
+            <img src="https://count.getloli.com/get/@demo?theme=moebooru" alt="Moebooru"/>
+            <h5>moebooru-h</h5>
+            <img src="https://count.getloli.com/get/@demo?theme=moebooru-h" alt="Moebooru-Hentai"/>
+            <h5>rule34</h5>
+            <img src="https://count.getloli.com/get/@demo?theme=rule34" alt="Rule34"/>
+            <h5>gelbooru</h5>
+            <img src="https://count.getloli.com/get/@demo?theme=gelbooru" alt="Gelbooru"/>
+            <h5>gelbooru-h</h5>
+            <img src="https://count.getloli.com/get/@demo?theme=gelbooru-h" alt="Gelbooru-Hentai"/>
+        </details>
+        <h3>Credits</h3>
+        <ul>
+            <li>
+                <a href="https://repl.it/" target="_blank" rel="nofollow">repl.it</a>
+            </li>
+            <li>
+                <a href="https://github.com/moebooru/moebooru" target="_blank" rel="nofollow">moebooru</a>
+            </li>
+            <li>
+                <a href="javascript:alert(&quot;!!! NSFW LINK !!!\nPlease enter the url manually&quot;)">rule34.xxx</a>
+                NSFW
+            </li>
+            <li>
+                <a href="javascript:alert(&quot;!!! NSFW LINK !!!\nPlease enter the url manually&quot;)">gelbooru.com</a>
+                NSFW
+            </li>
+            <li>
+                <a href="https://icons8.com/icons/set/star" target="_blank" rel="nofollow">Icons8</a>
+            </li>
+        </ul>
+        <h3>Tool</h3>
+        <div class="tool">
+            <code>https://count.getloli.com/get/@</code>
+            <input id="name" type="text" placeholder=":name" style="display: inline-block; width: 80px; height: 1.4em; line-height: 1.4em; margin: 0 4px; vertical-align: middle;"/>
+            <code>?theme=</code>
+            <select id="theme" style="display: inline-block; height: 1.6em; line-height: 1.6em; font-size: 14px; margin: 0 4px; padding: 0 4px; vertical-align: middle;">
+                <option value="moebooru">moebooru</option>
+                <option value="moebooru-h">moebooru-h</option>
+                <option value="rule34">rule34</option>
+                <option value="gelbooru">gelbooru</option>
+                <option value="gelbooru-h">gelbooru-h</option>
+            </select>
+            <button id="get" style="margin: 10px 0;" onclick="_evt_push(&quot;click&quot;, &quot;normal&quot;, &quot;get_counter&quot;)">Get</button>
+            <img id="result" style="display: block;"/>
+            <script>
+                var btn = document.getElementById('get')
+                  , img = document.getElementById('result')
+
+                btn.addEventListener('click', function() {
+                    var name = document.getElementById('name')
+                      , themeEl = document.getElementById('theme')
+                    var text = name.value ? name.value.trim() : ''
+                    var theme = themeEl.value || 'moebooru'
+                    if (!text) {
+                        alert('Please input counter name.')
+                        return
+                    }
+
+                    img.src = 'https://count.getloli.com/get/@' + text + '?theme=' + theme
+                })
+            </script>
+        </div>
+        <p class="copy">
+            <a href="https://github.com/journey-ad/Moe-counter" target="_blank" onclick="_evt_push(&quot;click&quot;, &quot;normal&quot;, &quot;go_github&quot;)">source code</a>
+        </p>
+    </body>
+</html>
