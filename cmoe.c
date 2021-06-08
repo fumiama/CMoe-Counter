@@ -27,12 +27,12 @@ static void headers(uint32_t content_len, const char* content_type, int no_cache
     fwrite(buf, offset, 1, stdout);
 }
 
-static void http_error(char* type, char* msg) {
+static void http_error(const char* type, const char* msg) {
     fprintf(stdout, type, msg);
     exit(EXIT_FAILURE);
 }
 
-static char* get_arg(char* query) {
+static char* get_arg(const char* query) {
     int len = 0;
     while(query[len] && query[len] != '&') len++;
     if(len > 0) {
@@ -140,13 +140,16 @@ static void return_count(char* name, char* theme) {
                             fwrite(theme_type[n], len_type[n], 1, stdout);
                             printf(img_slot_rear);
                         }
+                        puts("stub1");
+                        fflush(stdout);
                         fwrite(svg_tail, sizeof(svg_tail)-1, 1, stdout);
+                        puts("stub2");
+                        fflush(stdout);
                     }
                     free(spb);
                     return;
                 }
-            }
-            else free(spb);
+            } else free(spb);
         }
         fclose(fp);
         http_error(HTTP404, "No Such User.");
