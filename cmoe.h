@@ -22,6 +22,32 @@ typedef struct COUNTER COUNTER;
 #define CONTENT_LEN "Content-Length: %d\r\n"
 #define CACHE_CTRL "Cache-Control: max-age=0, no-cache, no-store, must-revalidate\r\n"
 
+const uint16_t mbl[] = {1442, 1254, 1406, 1322, 1418, 1706, 1582, 1546, 1478, 1418};
+const uint16_t mbhl[] = {930, 1050, 1162, 1058, 1114, 1446, 1082, 1374, 1242, 1126};
+const uint16_t r34l[] = {13806, 8958, 9438, 14678, 13246, 12682, 11310, 11054, 1818, 6874};
+const uint16_t gbl[] = {2550, 2302, 2450, 2494, 2298, 3042, 2886, 2754, 2574, 2550};
+const uint16_t gbhl[] = {1550, 1702, 1870, 1778, 1618, 2370, 1830, 2234, 1914, 1878};
+
+#define W_SMALL 45
+#define H_SMALL 100
+#define W_BIG 68
+#define H_BIG 150
+const char svg_small[] = 
+                "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"450\" height=\"100\" version=\"1.1\">\n"
+                "    <title>Moe Count</title>\n"
+                "    <g>\n"
+                "      \n";
+const char svg_big[] = 
+                "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"680\" height=\"150\" version=\"1.1\">\n"
+                "    <title>Moe Count</title>\n"
+                "    <g>\n"
+                "      \n";
+const char img_slot_front[] = "      <image x=\"%d\" y=\"0\" width=\"%d\" height=\"%d\" xlink:href=\"";
+const char img_slot_rear[] = "\"></image>\n";
+const char svg_tail[] = 
+                "    </g>\n"
+                "</svg>";
+
 const char* mb[] = {
     "data:image/gif;base64,R0lGODlhLQBkALMAACocJKGkunN8ntXa6BE1dwxKpTdvw0mq6v7j0vDWzOGFgLZtauGjov7+/gAAAP///yH5BAEAAA8ALAAAAAAtAGQAAAT/8MlJq7046827p04ohl8pjU2qCoJoco7aFEZtF2zrvmCcFgWZDJgTBBy8RygVmAmfs+IRWfI1mtAsC8BKUWFWrEwsXm27DZLGen2W340iV6D6Wthx4RseP6PTF3h5KgFvCzKHfX50V3ZKAUU5hUyJlIQLTXIAm5wAjiKRk1cKY5UBC6SanZ4ZIYVGTacMY6SUqTmramsOsKOztpcKkLibuh0OkwIKv1eowcNbrCa8mUDWBagB1wWbZ44eDgCZDOTl5udzXN/H4nGrCfDwq+ktL7xcDQAD1gPx8PtABtBbt+HelgYEEjZAwJAhQoUD7QkQN7HWwoYNVSiIOG1iLAYK/0JibBhyGccqHpvFG8kw3oKT4EIYaTSiZk1cxo6lmFkmi5mJgKrsjOXziRGgBDE4MLCsTc+iR0MmvdNwFtGiMugIYKhgKggE5EhdxcrkijmvShhUdSqjphuzDBmgdaCWK9s6KPTARdAVBjm7V/OmYfOx5dxyiQKLwDvGF4IEaJUYYHSliWAvi5k0QdX3WBjLmfEu0ZxiQeQJgi4PHi3kNOonqlVjFto6NGbWbQu4Tm17taA0uj/wxu0bioPg4LKwll0HuU7jVpjPFl7UbfXdv0UTh336eHay3I8J0A0efLjIvL6XryOtYIv1WB0cQP8evk8A88HNt8m//4j84FxTSP8AAwyQEBAHJEhDggoSYE13IRhQCA02SEhggQUuyKABDgKBXoEVDjggggweUMCFBWqTYHutDMCCNpPtQ+ArIhqhoYICFFhPTiAME8BkLGAzwIxDYlgkhoUQYMN8BSblQJNAjrdAgQtgYiAQUw5QZZET0uCiEU4iEaGUVZZ5YAEElLklDuNp8+UR4pGp5plpqrkAmwYcV8CQ9C3CwgJ0RnInC2LuAEOQcxQRaCRs1jONNYnmsKgcbLp2wjVcDEhohwTAMgwADz4KKYp8doiMkQGA6qE9Iuhj5AAOmPqqQNdYWoGrRsbq4ayqrprEk6/GWgOwuY6QxAmzxprgqUja2iLWqsrOR6qjx6L26hTL5oghtdUq8eqO82mro7NKfStmuMF2a22uJyyb7gnVEtskaia+Kx+5Sog7L73mygegPdd+QqqK/wLM7h2vFlCwwRiuI69A+K7bcCDvHstLxT0ayS3DE1N88K/JlvsxDw/DKnLHIGMMgrm/6rsvwioLR+rLFZSMb8kmezxyFbPmDPPOwvVMUMkbgyP0yUAfc7TOScOw9M9NF2TAq3kqNbWRC+tX4rJWb531MV5/LZnX5CJDditnkxzA1k6uzSCcKdPMdMQnGLoLjxVEAAA7",
     "data:image/gif;base64,R0lGODlhLQBkALMAAKGkunN8ntXa6BE1dwxKpTdvw0mq6vHm3+GBdvajm7QYF////wAAAP///wAAAAAAACH5BAEAAA0ALAAAAAAtAGQAAAT/sMlJq704622Z/2DYhWQZEoWhrqzKVAzRzvRaFIRcu1es70Bc7td6dYbApGGIag2Mx5wSmBvkUobCM+MjTllC63XLZXq/2WqVjGEIkSrsNLyGtt9SedwGjq/ZGm5meoR9aQQDiXZceAQCCwsCWY+QBQp8h4iAgW8GlAKWlAsGCo+gkm+bG4JelmCXe1liqpw4La42sFmysxxHKT8KCK98ColWi74xQisKCc8JWbAICQgIxwTJHG43wcaJztDH38i+MDe20gMKCgsJB/AH7O7HtIEoQt3G8/Hw/MfaVnWTomIfggX95B08oClgLThZrC3sZ20BAk322qBgYuMApITw/xAmUNDQnARWV2xAAwmvGklFJht0SbnC2juWz15m7PGBpoqbLZ+1vGZl5yo3LNYBbanAQ6JsMdt4UJEoQAB2CgKQ+RB1VVUAAK6GDcC1q0AmAcCGPUbWLJdHJuKKiBoCkt27ePNadNjjmd6/f6kh4EuBAYKWgBPbtUn4ZL8EiiOza8zgpl/AHxS75MtAwGF4BzF70DySs8V4ofPWTUytaaAFCob+XQ0YweTX4VLPHp2YAQDCDCBNVpy59+9tkX4T54257SoAApT3Zr7bnG/pooP3jlk8O/Gu2r1vp7s8/Gzw5b+TVy1Xb+MO7turRh+5/vvC9e2vzz/epHn+7u0HYP+A3A2ImYDZyQWeXB/U46BRZaAjIQ4PPnjfEQNM2M0sFcIE3hBWaKhFh09cWNgQDAxwjRkYWehWFy9U9oxEJEhkjYkTwHgSNNDYYZiNOMqEYo6PJeCjjYNxpyOR8RgJA5L3ecDEIgw8RiWUypiRTJVNbglkljl40MFS2vxIozJi9pBQmVi6xWQ8bH7ppkxLOdlBm25yCWcbeL64Jp9y5mkloNZAeM+gPTgY5IkYOdTZMQIIsOhJCzT6VqSYTtrZXZJeiqkAziG4gKOfZmrWf6N6+mmQm+JFaqmg4ohqqm3AGqmJrbqq6qoFEtiDrZ36d16ttuI67K/FCntsB8BeOCtHJK/C6uyBbQQAa6jILQuDtaViuwq1xH7qbSCi2BUsF9xGqhWuA5RKWYXsaqkMNojIOuF7KXIoKyjoRMkreJ84W9apA89JQQQAOw==",
@@ -82,31 +108,5 @@ const char* gbh[] = {
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEQAAACWBAMAAACVyzOlAAAAKlBMVEUAAAD///8CAgKhpLpzfJ71vIkMSqXV2ugRNXc3b8PTa2vukWnGL1ibIEeAfI1+AAAAAXRSTlMAQObYZgAABQ9JREFUWMPt1TvP0lAYB3DSb/DYaqMutRCNYzmNuGKreGFSj4PoIJojuNUaiaOXNFXjoDFoV28DOBlrjLhojDHYSd2M38XntEALPW11cPP/8uZ9SX88F0pp7X/+5x9F+gOia1WvkIIteubpXk1g9t4PMoV2a8Iy24MH+vLJIzG5HwSBviT9mrjTyuxll2viTkuD5GpxJzS6Lo3ZRU3YCcvwDMe7kfRLOo3H4yETE6kRd2JszIZjxi6LxOhasB2PDQP+EM3b6IAaPGKMBcEF+4iISB0AuMausiFOQ0w7T6Q9wDO+yAJODPVQbpZdEOdKMOSkg/9tbqRDkvZVgO0xUQ9stIFFEcAi9wHOA4CprYldCbA7SHjOGwDKGkHBgUXacBWXxq1d7JQl+gIQ08EjLmPMdo21YfQFQAIq1y4xRwSgmQ6SgAwB1TSIgWSVBoIlcZDgxt02dnK1tEx9SToqJ21OZAJupozkLkib91E+cKKaICNZZU+OvAaChbTsWV4Q3qf7AZQIiSVb2TINNZ7WQaJ2bVv5+hpcW7bXytgyJ3GfT1jo62tHtlXbyhLsjAQMJPMJdGfv2rI9su1mdt4raHAJrBDSSRS+a6t2x7YPZEgLTEc2Act0KaUz+q7DCXZKiQHEHiFxla9vGKP0jG2bNiYldQfwveWfNXM+fHyH0vefrJgcSAkgMZFA90Vw/S6lLwcWF6SZNuKEtBfkIKWfHyKxiK6vdsaDrRWBkPaGt2w7BZwYuAu+uQnZSunp4S0rC5DgnE5Cjr6JSfADwSaBBXl7jpP732pCApz0biM5db1ZQmYhRXKuiDi8yoxiek3RNU86SJwdNM6siKig7gh7nJwtIgpAZ0onOM33QuLAlaPPaW/26+kGkSAmbVCw17Nfv77pdVJI7NHo6A/8kJQQnOJkCTGdmNDe61KCAo2A7Fon9FUhAbgSVpKjSEIRkZwVmeJHpYS0EtJ7Tl9JloDgY4RkEiaEiAk+jk1m4UxE9mTIdIbkSQk5+m76DsnTBjE1MVG7SHCcpzaxhQSQzJHQ3lNrg0iteB2MEiXkSZ60NohWb9bzxE1INE+IJtXKiU40fYOQlERIjkt6rYzMkWAXTUCcDKltpt4ynZREBcQAfi9ckld5QrJkPi0kLU5eRtFXEZGIaa3IHE/0e01MCICjTKKvYUjf90XEcE0nJiGtIlPKyUATEOKa7WKCK5n1mKjKJCwiTSm+jajySySE7BvcEBMrIScAtnl+bpiYNADciBOyz/NviImzJPu9fCcdTwJpGCvi54nEyWEL5GhKT/+cTAael9tJkzhxlGj65hIudcpjOVLj5JYjR2xwh2IGeYKLI2mph3z/zoz2pl/YDTGx1MO+f2/2fDL94uVX0hu4tTU6oGOeTyYf8U/+NmGZitlqA2b2MgKALXmiWJZpxWTnBxASNCQhmCLScttKNYFyIjsuYFKi5UgLjCpiyFBBZPzZovMsST9PjA3CtA2CfTaIJyAoAKPvSojfryZMWyM4So54QoKHM6S/RrBPnjCtmtzQ1glmbWnfZ4N+Ncm0qoMhIszra1mCs/BfnpScryAe8wbNHOHHUjJg7EY54a1uapXEryBeNWE4bxnZPfDYAL/SBG/d8hxJfJIskfOEsYHP/CXZZeTJ7rhIhmxcaEhQYFIig5wj+oDvrS0JFiEEAEhK9JrOk73UABFBWvTNsHq9XEzQ8AKlVbAAwUAR0QWp/U1+Aw0dmDl+Z6wWAAAAAElFTkSuQmCC",
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEQAAACWCAMAAABQO96kAAAANlBMVEUAAAD///8CAgJrh7wnNYcMSqX67t9JqurxkHL3waQRNXc3b8NHWZvj6++pq7bEblLqwsfTaYa2ntWyAAAAAXRSTlMAQObYZgAABOhJREFUaN7szzEKACAMQ9GSOnr/81q6CCI4ZJP/DvBJAgAA4FeSwqepYkeymB2NbN3xK91xDr07Ol2mbItTOtBtEIaBACrqU2RbB/n/vx020LAuy8JOKpKr+OGExEF32uR78BqNIiTQ2voBfiKgdMIzA2NCadin0UcgoxC8EwfSH4UcHQLHRiIOyig4GOBCeopfiyldjQBGRiK3ufHbKJg06H1kEzaD/c1sNwToGOsmfxnrekc6RxwLODISuRhCVfE5RhoXIiNky6WqZsjGfGwi67Ymz4ERSL4rf4EUPZH1+ugH4s3oIfG6QCiJmJwhG4JEhAPkiJOqpRQRvodgZVRMhG2Q5wiFgLfNDBHckewXrSTBRIgJBE61HdEDgVJ4IAiECGSk8IaY4ERYdwRExDGJeK11V5iIV6BWYB7BgaiZBpJHqrRiybQrP1AupGrspmggUI1K9QHCRNw9GE3EI6qcRChEIA5FMBZ/1KoA3Dk0GgIhGJPAQO4Kha4aBTGNUE5kiYkCgdoShUwiqVwIL8T+g0AAx7IkUuhWlihOxGcQhBMIDwRadoTPkFdA8PpG7ERQnyChuBqAvGMlokAtbJd+DinFLNvzGZUl4k8Qi7veEuWJhDGJNKFBD5FQ7NaeT/2qzQ6bHAVhMAAfzOYieYe09///7CWBilu14u3c+8EtjDwGFm07Fesm+ZILxICO5JwbUyxBLA9HIMIziCtx7EwQ9pAqYgZEdRLJrwZhsUqMMIMcYa7KeRqJFnmCKGQIHKnXSBzWFoiYG1Ig0hHKE8hoEcIoHhJvBUL5JlJeIYsZHZlNIGWHMOMm0u6aOBJ8Oqky9JaSN7cgYSD8jwjA1BFiJco3kGdHnmDEkiRmguIO8vzzDOT5pyMp+V9VyvcWdgmFQYZUXxK6V0omwhLBC2Emi/INBAQfvCxhgFNHWInzTYQ64oWAPKo8q2Qm4kBiKKcVgdZZJSsRM0XgCL9apDVNI7FL4WFCGgjYyppEKsft77WzFVIN7IYhOovUKKVVsBYCN6DzSCsfwLdC2q6dR0CRUUgLK6aR9Bo3ChmZRHRc/fUSljtIbkiMQW2FgD3mlFLyDFFKzIGjkPaibLPkCeL374YgCgnDO1fjCnHC4ve+haCBvd6cm2HIdRkDgaiiGUMxw/KBCGMgLAos3tnTjJRSvqgikLYoDIwyhuHIJRFI6sjeOENyXG+PMJaNsVge6RzpxkBqR8rOmEUKM3dk7RpGIPkjUiwLryu7My6QcbIjtSFl9JoxgcTqPx52Lhzpm9V7u3GFeMZ/ED6ft7gxkK+8R5aexwaRvM19JCGldyTdRZxwY7MGIvIN2Sm57JF2eebobq0tIjcQIvqPiM/nx8ivfI7IGwKQ3EUe74hnIPQREXjEcoBY7xyy5myfBIIJRJW2E5f8lqS0Rd6UDLLAEPqMKK3IKGUYAzmKNASKK4TOEBv5QiqdIjyLoOIKqfXDdMS1HyDZYwTBlR8h7VP+GZL5GMnSE3PpCCs+I6hn+8QIUEf0AlE9Q0ARtuh+x4bREQrkKB3BBhEzDhHUEwTMADgi+ydbIFgROUPWoCFfbwiAYVwioodvGZl6RGy90mFWg46RLBKCRU8RvOYi2pF8+FgL4wxJIkA76fBTQdZOaPbWSWQ9qWX/o4pHc774CmQ5/9a1s2+e9fP8BSitYnnY2OQhAAAAAElFTkSuQmCC"
 };
-
-const uint16_t mbl[] = {1442, 1254, 1406, 1322, 1418, 1706, 1582, 1546, 1478, 1418};
-const uint16_t mbhl[] = {930, 1050, 1162, 1058, 1114, 1446, 1082, 1374, 1242, 1126};
-const uint16_t r34l[] = {13806, 8958, 9438, 14678, 13246, 12682, 11310, 11054, 1818, 6874};
-const uint16_t gbl[] = {2550, 2302, 2450, 2494, 2298, 3042, 2886, 2754, 2574, 2550};
-const uint16_t gbhl[] = {1550, 1702, 1870, 1778, 1618, 2370, 1830, 2234, 1914, 1878};
-
-#define W_SMALL 45
-#define H_SMALL 100
-#define W_BIG 68
-#define H_BIG 150
-const char svg_small[] = 
-                "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"450\" height=\"100\" version=\"1.1\">\n"
-                "    <title>Moe Count</title>\n"
-                "    <g>\n"
-                "      \n";
-const char svg_big[] = 
-                "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"680\" height=\"150\" version=\"1.1\">\n"
-                "    <title>Moe Count</title>\n"
-                "    <g>\n"
-                "      \n";
-const char img_slot_front[] = "      <image x=\"%d\" y=\"0\" width=\"%d\" height=\"%d\" xlink:href=\"";
-const char img_slot_rear[] = "\"></image>\n";
-const char svg_tail[] = 
-                "    </g>\n"
-                "</svg>";
 
 #endif
