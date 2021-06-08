@@ -140,12 +140,11 @@ static void return_count(char* name, char* theme) {
                             fwrite(theme_type[n], len_type[n], 1, stdout);
                             printf(img_slot_rear);
                         }
-                        puts("stub1");
                         fflush(stdout);
                         fwrite(svg_tail, sizeof(svg_tail)-1, 1, stdout);
-                        puts("stub2");
                         fflush(stdout);
                     }
+                    fclose(fp);
                     free(spb);
                     return;
                 }
