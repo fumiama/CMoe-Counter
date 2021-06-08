@@ -2,11 +2,7 @@
 
 多种风格可选的萌萌计数器
 
-
-
-<img src="http://pan.fumiama.top:42412/cmoe?name=cmoe" alt="CMoe" />
-
-
+![CMoe](http://pan.fumiama.top:42412/cmoe?name=cmoe)
 
 <details>
 <summary>More theme</summary>
