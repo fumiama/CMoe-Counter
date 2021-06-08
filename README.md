@@ -1,6 +1,6 @@
-# Moe-counter
+# CMoe-Counter
 
-多种风格可选的萌萌计数器
+多种风格可选的萌萌计数器的简易C语言版本
 
 ![CMoe](http://pan.fumiama.top:42412/cmoe?name=cmoe&theme=gb)
 
