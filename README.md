@@ -2,7 +2,7 @@
 
 多种风格可选的萌萌计数器
 
-![CMoe](http://pan.fumiama.top:42412/cmoe?name=cmoe)
+![CMoe](http://pan.fumiama.top:42412/cmoe?name=cmoe&theme=gb)
 
 <details>
 <summary>More theme</summary>
