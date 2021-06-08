@@ -98,7 +98,7 @@ static void return_count(char* name, char* theme) {
     FILE* fp = fopen(DATFILE, "rb+");
     if(!fp) fp = fopen(DATFILE, "wb+");
     if(fp) {
-        int ch, exist = 0;
+        int ch, exist = 0, user_exist = 0;
         while(has_next(fp, ch)) {
             SIMPLE_PB *spb = get_pb(fp);
             COUNTER *d = (COUNTER *)spb->target;
@@ -144,14 +144,14 @@ static void return_count(char* name, char* theme) {
                         fwrite(svg_tail, sizeof(svg_tail)-1, 1, stdout);
                         fflush(stdout);
                     }
-                    fclose(fp);
                     free(spb);
-                    return;
+                    user_exist = 1;
+                    break;
                 }
             } else free(spb);
         }
         fclose(fp);
-        http_error(HTTP404, "No Such User.");
+        if(!user_exist) http_error(HTTP404, "No Such User.");
     } else http_error(HTTP500, "Open File Error.");
 }
 
