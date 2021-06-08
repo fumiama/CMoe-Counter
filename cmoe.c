@@ -8,6 +8,13 @@
 static uint32_t* items_len;
 static COUNTER counter;
 
+static void write2stdo(char* buf, uint32_t size, uint32_t content_len) {
+    content_len += size;
+    fwrite((char*)&content_len, sizeof(uint32_t), 1, stdout);
+    fwrite(buf, size, 1, stdout);
+    fflush(stdout);
+}
+
 #define ADD_HERDER(h)\
     strcpy(buf + offset, (h));\
     offset += sizeof((h)) - 1;
@@ -24,11 +31,14 @@ static void headers(uint32_t content_len, const char* content_type, int no_cache
     if(no_cache) ADD_HERDER(CACHE_CTRL);
     ADD_HERDER_PARAM(CONTENT_TYPE, content_type);
     ADD_HERDER_PARAM(CONTENT_LEN "\r\n", content_len);
-    fwrite(buf, offset, 1, stdout);
+    write2stdo(buf, offset, content_len);
 }
 
 static void http_error(const char* type, const char* msg) {
-    fprintf(stdout, type, msg);
+    char* str = malloc(strlen(type) + strlen(msg));
+    sprintf(str, type, msg);
+    write2stdo(str, strlen(str), 0);
+    free(str);
     exit(EXIT_FAILURE);
 }
 
