@@ -2,7 +2,11 @@
 
 多种风格可选的萌萌计数器
 
-![Moe-counter](http://pan.fumiama.top:42412/cmoe?name=cmoe)
+
+
+<img src="http://pan.fumiama.top:42412/cmoe?name=cmoe" alt="CMoe" />
+
+
 
 <details>
 <summary>More theme</summary>
@@ -16,8 +20,7 @@
 ##### gelbooru(gb)
 ![Gelbooru](https://count.getloli.com/get/@demo?theme=gelbooru)</details>
 
-## Demo
-[https://count.getloli.com](https://count.getloli.com)
+## [Demo](http://pan.fumiama.top:42412)
 
 ## Usage
 ### Install [simple-http-server](https://github.com/fumiama/simple-http-server)
