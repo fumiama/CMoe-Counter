@@ -2,7 +2,7 @@
 
 多种风格可选的萌萌计数器
 
-![Moe-counter](https://count.getloli.com/get/@Moe-counter.github)
+![Moe-counter](http://pan.fumiama.top:42412/cmoe?name=cmoe)
 
 <details>
 <summary>More theme</summary>
