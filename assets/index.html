@@ -27,13 +27,13 @@
     <body>
         <h3>How to use:</h3>
         <h5>SVG address</h5>
-        <code>https://count.getloli.com/get/@:name</code>
+        <code>http://pan.fumiama.top:42412/cmoe?name=yourname</code>
         <h5>Img tag</h5>
-        <code>&lt;img src="https://count.getloli.com/get/@:name" alt=":name" /></code>
+        <code>&lt;img src="http://pan.fumiama.top:42412/cmoe?name=yourname" alt="yourname" /></code>
         <h5>Markdown</h5>
-        <code>![:name](https://count.getloli.com/get/@:name)</code>
+        <code>![yourname](http://pan.fumiama.top:42412/cmoe?name=yourname)</code>
         <h3>
-            eg:<img src="https://count.getloli.com/get/@index" alt="Moe Count!"/>
+            eg:<img src="/cmoe?name=index" alt="Moe Count!"/>
         </h3>
         <i>
             Data can access by anyone, please<span style="color: #ff4500;">DO NOT</span>
@@ -45,17 +45,17 @@
             </summary>
             <p style="margin: 0;">
                 Just use the query parameters <code>theme</code>
-                , like this: <code>https://count.getloli.com/get/@:name?theme=moebooru</code>
+                , like this: <code>/cmoe?name=yourname&theme=mb</code>
             </p>
-            <h5>moebooru</h5>
+            <h5>moebooru(mb)</h5>
             <img src="https://count.getloli.com/get/@demo?theme=moebooru" alt="Moebooru"/>
-            <h5>moebooru-h</h5>
+            <h5>moebooru-h(mbh)</h5>
             <img src="https://count.getloli.com/get/@demo?theme=moebooru-h" alt="Moebooru-Hentai"/>
-            <h5>rule34</h5>
+            <h5>rule34(r34)</h5>
             <img src="https://count.getloli.com/get/@demo?theme=rule34" alt="Rule34"/>
-            <h5>gelbooru</h5>
+            <h5>gelbooru(gb)</h5>
             <img src="https://count.getloli.com/get/@demo?theme=gelbooru" alt="Gelbooru"/>
-            <h5>gelbooru-h</h5>
+            <h5>gelbooru-h(gbh)</h5>
             <img src="https://count.getloli.com/get/@demo?theme=gelbooru-h" alt="Gelbooru-Hentai"/>
         </details>
         <h3>Credits</h3>
@@ -80,38 +80,43 @@
         </ul>
         <h3>Tool</h3>
         <div class="tool">
-            <code>https://count.getloli.com/get/@</code>
-            <input id="name" type="text" placeholder=":name" style="display: inline-block; width: 80px; height: 1.4em; line-height: 1.4em; margin: 0 4px; vertical-align: middle;"/>
-            <code>?theme=</code>
+            <code>http://pan.fumiama.top:42412/cmoe?name=</code>
+            <input id="name" type="text" placeholder="name" style="display: inline-block; width: 80px; height: 1.4em; line-height: 1.4em; margin: 0 4px; vertical-align: middle;"/>
+            <code>&theme=</code>
             <select id="theme" style="display: inline-block; height: 1.6em; line-height: 1.6em; font-size: 14px; margin: 0 4px; padding: 0 4px; vertical-align: middle;">
-                <option value="moebooru">moebooru</option>
-                <option value="moebooru-h">moebooru-h</option>
-                <option value="rule34">rule34</option>
-                <option value="gelbooru">gelbooru</option>
-                <option value="gelbooru-h">gelbooru-h</option>
+                <option value="mb">moebooru</option>
+                <option value="mbh">moebooru-h</option>
+                <option value="r34">rule34</option>
+                <option value="gb">gelbooru</option>
+                <option value="gbh">gelbooru-h</option>
             </select>
             <button id="get" style="margin: 10px 0;" onclick="_evt_push(&quot;click&quot;, &quot;normal&quot;, &quot;get_counter&quot;)">Get</button>
             <img id="result" style="display: block;"/>
             <script>
-                var btn = document.getElementById('get')
-                  , img = document.getElementById('result')
-
+                function get_data(url, recv_fun) {
+                    var httpRequest = new XMLHttpRequest();	//第一步：建立所需的对象
+                    httpRequest.open('GET', url, true);		//第二步：打开连接,将请求参数写在url中
+                    httpRequest.send();						//第三步：发送请求
+                    httpRequest.onreadystatechange = function () {
+                        if (httpRequest.readyState == 4 && httpRequest.status == 200) {
+                            recv_fun(httpRequest.responseText);
+                        }
+                    };
+                }
+                var btn = document.getElementById('get'), img = document.getElementById('result')
                 btn.addEventListener('click', function() {
-                    var name = document.getElementById('name')
-                      , themeEl = document.getElementById('theme')
+                    var name = document.getElementById('name'), themeEl = document.getElementById('theme')
                     var text = name.value ? name.value.trim() : ''
-                    var theme = themeEl.value || 'moebooru'
-                    if (!text) {
-                        alert('Please input counter name.')
-                        return
-                    }
-
-                    img.src = 'https://count.getloli.com/get/@' + text + '?theme=' + theme
+                    var theme = themeEl.value || 'mb'
+                    if (!text) alert('Please input counter name.');
+                    else get_data('/cmoe?name=' + text + '&reg=fumiama', function(t) {
+                        img.src = '/cmoe?name=' + text + '&theme=' + theme;
+                    });
                 })
             </script>
         </div>
         <p class="copy">
-            <a href="https://github.com/journey-ad/Moe-counter" target="_blank" onclick="_evt_push(&quot;click&quot;, &quot;normal&quot;, &quot;go_github&quot;)">source code</a>
+            <a href="https://github.com/fumiama/CMoe-Counter" target="_blank" onclick="_evt_push(&quot;click&quot;, &quot;normal&quot;, &quot;go_github&quot;)">source code</a>
         </p>
     </body>
 </html>
