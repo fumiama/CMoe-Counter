@@ -33,22 +33,22 @@ cmake ..
 make
 make install
 ```
-### Copy files to web root
+### 4. Copy files to web root
 1. Copy `favicon.ico`, `index.html`, `style.css` and the compiled binary `cmoe` into the same folder.
 2. Run `simple-http-server` by the command
 ```bash
 simple-http-server -d port folder
 ```
-### Enjoy it!
+### 5. Enjoy it!
 
 ## API
 The API of CMoe is simpler than [Moe-counter](https://github.com/journey-ad/Moe-counter)
-### Register
+### 1. Register
 `token` is defined in `cmoe.h`
 ```
 http://yourdomain/cmoe?name=yourname&reg=token
 ```
-### Refer
+### 2. Refer
 ```
 http://yourdomain/cmoe?name=yourname(&theme=mb/mbh/gb/gbh/r34)
 ```
