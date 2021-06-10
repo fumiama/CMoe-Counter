@@ -1,8 +1,9 @@
+#include <simple_protobuf.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/file.h>
 #include <unistd.h>
-#include <simple_protobuf.h>
 #include "cmoe.h"
 
 static uint32_t* items_len;
@@ -71,14 +72,15 @@ static int del_user(FILE* fp, SIMPLE_PB* spb) {
                     fseek(fp, this, SEEK_SET);
                     if(fwrite(data, cap, 1, fp) == 1) {
                         free(data);
+                        fflush(fp);
                         return 0;
                     }
                 }
             }
             free(data);
         }
-        return 2;
     }
+    return 2;
 }
 
 static int add_user(char* name, uint32_t count, FILE* fp) {
@@ -108,6 +110,7 @@ static void return_count(char* name, char* theme) {
     FILE* fp = fopen(DATFILE, "rb+");
     if(!fp) fp = fopen(DATFILE, "wb+");
     if(fp) {
+        flock(fileno(fp), LOCK_EX);
         int ch, exist = 0, user_exist = 0;
         while(has_next(fp, ch)) {
             SIMPLE_PB *spb = get_pb(fp);
@@ -117,7 +120,7 @@ static void return_count(char* name, char* theme) {
                 else {
                     if (add_user(d->name, d->count + 1, fp)) http_error(HTTP500, "Add User Error.");
                     else {
-                        fflush(fp);
+                        fclose(fp);
                         char cntstr[11];
                         sprintf(cntstr, "%010u", d->count);
                         int isbig = 0;
@@ -150,7 +153,6 @@ static void return_count(char* name, char* theme) {
                             fwrite(theme_type[n], len_type[n], 1, stdout);
                             printf(img_slot_rear);
                         }
-                        fflush(stdout);
                         fwrite(svg_tail, sizeof(svg_tail)-1, 1, stdout);
                         fflush(stdout);
                     }
@@ -160,7 +162,6 @@ static void return_count(char* name, char* theme) {
                 }
             } else free(spb);
         }
-        fclose(fp);
         if(!user_exist) http_error(HTTP404, "No Such User.");
     } else http_error(HTTP500, "Open File Error.");
 }
@@ -170,6 +171,7 @@ static int name_exist(char* name) {
     if(!fp) fp = fopen(DATFILE, "wb+");
     if(fp) {
         int ch, exist = 0;
+        flock(fileno(fp), LOCK_EX);
         while(has_next(fp, ch)) {
             SIMPLE_PB *spb = get_pb(fp);
             COUNTER *d = (COUNTER *)spb->target;
@@ -207,11 +209,12 @@ int main(int argc, char **argv) {
                         else if(!name_exist(name)) {
                             FILE* fp = fopen(DATFILE, "ab+");
                             if(fp) {
+                                flock(fileno(fp), LOCK_EX);
                                 add_user(name, 0, fp);
+                                fclose(fp);
                                 char* msg = "<P>Success.\r\n";
                                 headers(strlen(msg), "text/html", 1);
                                 fwrite(msg, strlen(msg), 1, stdout);
-                                fclose(fp);
                             } else http_error(HTTP500, "Open File Error.");
                         } else http_error(HTTP400, "Name Exist.");
                     } else http_error(HTTP400, "Null Register Token.");
