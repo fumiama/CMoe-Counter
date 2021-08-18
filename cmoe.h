@@ -2,7 +2,6 @@
 #define _CMOE_H_
 
 #define DATFILE "dat.sp"
-#define TOKENFILE "token"
 #define TOKEN "fumiama"
 #define COUNTER_NAME_LEN 64
 struct COUNTER {
