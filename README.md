@@ -31,10 +31,10 @@ mkdir build
 cd build
 cmake ..
 make
-make install
+# make install
 ```
 ### 4. Copy files to web root
-1. Copy `favicon.ico`, `index.html`, `style.css` and the compiled binary `cmoe` into the same folder.
+1. Copy `favicon.ico`, `index.html`, `style.css` and the compiled binary `cmoe` (in the `build` folder) into the same folder.
 2. Run `simple-http-server` by the command
 ```bash
 simple-http-server -d port folder
