@@ -26,7 +26,6 @@ static void headers(uint32_t content_len, const char* content_type) {
     ADD_HERDER(CACHE_CTRL);
     ADD_HERDER_PARAM(CONTENT_TYPE, content_type);
     ADD_HERDER_PARAM(CONTENT_LEN "\r\n", content_len);
-    write2stdo(buf, offset, content_len);
     content_len += offset;
     write(1, (char*)&content_len, sizeof(uint32_t));
     write(1, buf, offset);
