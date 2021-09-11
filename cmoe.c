@@ -35,6 +35,7 @@ static void http_error(const char* type, const char* msg) {
     char* str = malloc(strlen(type) + strlen(msg));
     uint32_t len = strlen(str);
     sprintf(str, type, msg);
+    fflush(stdout);
     write(1, (char*)&len, sizeof(uint32_t));
     write(1, str, len);
     free(str);
@@ -148,9 +149,10 @@ static void return_count(char* name, char* theme) {
                         for(int i = 0; i < 10; i++) {
                             printf(img_slot_front, w * i, w, h);
                             int n = cntstr[i] - '0';
-                            write(1, theme_type[n], len_type[n]);
+                            fwrite(theme_type[n], len_type[n], 1, stdout);
                             printf(img_slot_rear);
                         }
+                        fflush(stdout);
                         write(1, svg_tail, sizeof(svg_tail)-1);
                     }
                     free(spb);
