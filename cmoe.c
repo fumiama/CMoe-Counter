@@ -22,7 +22,7 @@ static void headers(uint32_t content_len, const char* content_type) {
     char buf[1024];
     uint32_t offset = 0;
 
-    ADD_HERDER(HTTP200 SERVER_STRING);
+    ADD_HERDER(H200 SERVER_STRING);
     ADD_HERDER(CACHE_CTRL);
     ADD_HERDER_PARAM(CONTENT_TYPE, content_type);
     ADD_HERDER_PARAM(CONTENT_LEN "\r\n", content_len);
@@ -31,11 +31,10 @@ static void headers(uint32_t content_len, const char* content_type) {
     write(1, buf, offset);
 }
 
-static void http_error(const char* type, const char* msg) {
-    char* str = malloc(strlen(type) + strlen(msg));
-    uint32_t len = strlen(str);
-    sprintf(str, type, msg);
-    fflush(stdout);
+static void http_error(RESPCODE code, char* msg) {
+    uint32_t len = strlen(msg) + typel[code];
+    char* str = malloc(len);
+    sprintf(str, types[code], msg);
     write(1, (char*)&len, sizeof(uint32_t));
     write(1, str, len);
     free(str);
