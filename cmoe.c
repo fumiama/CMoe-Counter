@@ -22,8 +22,7 @@ static void headers(uint32_t content_len, const char* content_type) {
     char buf[1024];
     uint32_t offset = 0;
 
-    ADD_HERDER(H200 SERVER_STRING);
-    ADD_HERDER(CACHE_CTRL);
+    ADD_HERDER(HTTP200 SERVER_STRING CACHE_CTRL);
     ADD_HERDER_PARAM(CONTENT_TYPE, content_type);
     ADD_HERDER_PARAM(CONTENT_LEN "\r\n", content_len);
     content_len += offset;
@@ -31,7 +30,7 @@ static void headers(uint32_t content_len, const char* content_type) {
     write(1, buf, offset);
 }
 
-static void http_error(RESPCODE code, char* msg) {
+static void http_error(ERRCODE code, char* msg) {
     uint32_t len = strlen(msg) + typel[code];
     char* str = malloc(len);
     sprintf(str, types[code], msg);
@@ -156,11 +155,12 @@ static void return_count(char* name, char* theme) {
                     }
                     free(spb);
                     user_exist = 1;
-                    break;
+                    return;
                 }
             } else free(spb);
         }
         if(!user_exist) http_error(HTTP404, "No Such User.");
+        fclose(fp);
     } else http_error(HTTP500, "Open File Error.");
 }
 
