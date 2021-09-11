@@ -15,14 +15,14 @@ typedef struct COUNTER COUNTER;
 
 #define SERVER_STRING "Server: CMoe Counter by Fumiama/1.0\r\n"
 
-#define H200 "HTTP/1.0 200 OK\r\n"
+#define HTTP200 "HTTP/1.0 200 OK\r\n"
 #define H400 "HTTP/1.0 400 BAD REQUEST\r\nContent-Type: text/html\r\n\r\n<P>%s\r\n"
 #define H404 "HTTP/1.0 404 NOT FOUND\r\nContent-Type: text/html\r\n\r\n<HTML><TITLE>Not Found</TITLE>\r\n<BODY><P>%s\r\n</BODY></HTML>\r\n"
 #define H500 "HTTP/1.0 500 Internal Server Error\r\nContent-Type: text/html\r\n\r\n<P>%s\r\n"
-const char* types[] = {H200, H400, H404, H500};
-const uint8_t typel[] = {18, 59, 111, 69};
-enum RESPCODE {HTTP200, HTTP400, HTTP404, HTTP500};
-typedef enum RESPCODE RESPCODE;
+const char* types[] = {H400, H404, H500};
+const uint8_t typel[] = {59, 111, 69};
+enum ERRCODE {HTTP400, HTTP404, HTTP500};
+typedef enum ERRCODE ERRCODE;
 
 #define CONTENT_TYPE "Content-Type: %s\r\n"
 #define CONTENT_LEN "Content-Length: %d\r\n"
