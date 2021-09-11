@@ -16,20 +16,21 @@ static void write2stdo(char* buf, uint32_t size, uint32_t content_len) {
     fflush(stdout);
 }
 
-#define ADD_HERDER(h)\
+#define ADD_HERDER(h) {\
     strcpy(buf + offset, (h));\
-    offset += sizeof((h)) - 1;
-#define ADD_HERDER_PARAM(h, p)\
+    offset += sizeof((h)) - 1;\
+}
+#define ADD_HERDER_PARAM(h, p) {\
     sprintf(buf + offset, (h), (p));\
-    offset += strlen(buf + offset);
-#define EXTNM_IS_NOT(name) (strcmp(filepath+extpos, name))
+    offset += strlen(buf + offset);\
+}
 
-static void headers(uint32_t content_len, const char* content_type, int no_cache) {
+static void headers(uint32_t content_len, const char* content_type) {
     char buf[1024];
     uint32_t offset = 0;
 
     ADD_HERDER(HTTP200 SERVER_STRING);
-    if(no_cache) ADD_HERDER(CACHE_CTRL);
+    ADD_HERDER(CACHE_CTRL);
     ADD_HERDER_PARAM(CONTENT_TYPE, content_type);
     ADD_HERDER_PARAM(CONTENT_LEN "\r\n", content_len);
     write2stdo(buf, offset, content_len);
@@ -145,7 +146,7 @@ static void return_count(char* name, char* theme) {
                             h = H_SMALL;
                             head = svg_small;
                         }
-                        headers(get_content_len(isbig, len_type, cntstr), "image/svg+xml", 1);
+                        headers(get_content_len(isbig, len_type, cntstr), "image/svg+xml");
                         fwrite(head, sizeof(svg_small)-1, 1, stdout);
                         for(int i = 0; i < 10; i++) {
                             printf(img_slot_front, w * i, w, h);
@@ -213,7 +214,7 @@ int main(int argc, char **argv) {
                                 add_user(name, 0, fp);
                                 fclose(fp);
                                 char* msg = "<P>Success.\r\n";
-                                headers(strlen(msg), "text/html", 1);
+                                headers(strlen(msg), "text/html");
                                 fwrite(msg, strlen(msg), 1, stdout);
                             } else http_error(HTTP500, "Open File Error.");
                         } else http_error(HTTP400, "Name Exist.");
