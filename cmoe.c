@@ -9,13 +9,6 @@
 static uint32_t* items_len;
 static COUNTER counter;
 
-static void write2stdo(char* buf, uint32_t size, uint32_t content_len) {
-    content_len += size;
-    fwrite((char*)&content_len, sizeof(uint32_t), 1, stdout);
-    fwrite(buf, size, 1, stdout);
-    fflush(stdout);
-}
-
 #define ADD_HERDER(h) {\
     strcpy(buf + offset, (h));\
     offset += sizeof((h)) - 1;\
@@ -34,12 +27,17 @@ static void headers(uint32_t content_len, const char* content_type) {
     ADD_HERDER_PARAM(CONTENT_TYPE, content_type);
     ADD_HERDER_PARAM(CONTENT_LEN "\r\n", content_len);
     write2stdo(buf, offset, content_len);
+    content_len += offset;
+    write(1, (char*)&content_len, sizeof(uint32_t));
+    write(1, buf, offset);
 }
 
 static void http_error(const char* type, const char* msg) {
     char* str = malloc(strlen(type) + strlen(msg));
+    uint32_t len = strlen(str);
     sprintf(str, type, msg);
-    write2stdo(str, strlen(str), 0);
+    write(1, (char*)&len, sizeof(uint32_t));
+    write(1, str, len);
     free(str);
     exit(EXIT_FAILURE);
 }
@@ -147,15 +145,14 @@ static void return_count(char* name, char* theme) {
                             head = svg_small;
                         }
                         headers(get_content_len(isbig, len_type, cntstr), "image/svg+xml");
-                        fwrite(head, sizeof(svg_small)-1, 1, stdout);
+                        write(1, head, sizeof(svg_small)-1);
                         for(int i = 0; i < 10; i++) {
                             printf(img_slot_front, w * i, w, h);
                             int n = cntstr[i] - '0';
-                            fwrite(theme_type[n], len_type[n], 1, stdout);
+                            write(1, theme_type[n], len_type[n]);
                             printf(img_slot_rear);
                         }
-                        fwrite(svg_tail, sizeof(svg_tail)-1, 1, stdout);
-                        fflush(stdout);
+                        write(1, svg_tail, sizeof(svg_tail)-1);
                     }
                     free(spb);
                     user_exist = 1;
@@ -215,7 +212,7 @@ int main(int argc, char **argv) {
                                 fclose(fp);
                                 char* msg = "<P>Success.\r\n";
                                 headers(strlen(msg), "text/html");
-                                fwrite(msg, strlen(msg), 1, stdout);
+                                write(1, msg, strlen(msg));
                             } else http_error(HTTP500, "Open File Error.");
                         } else http_error(HTTP400, "Name Exist.");
                     } else http_error(HTTP400, "Null Register Token.");
