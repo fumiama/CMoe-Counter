@@ -146,9 +146,9 @@ static void return_count(char* name, char* theme) {
                         }
                         headers(get_content_len(isbig, len_type, cntstr+cntstrstart), "image/svg+xml");
                         write(1, head, sizeof(svg_small)-1);
-                        for(int i = cntstrstart; i < 10; i++) {
+                        for(int i = 0; i < 10-cntstrstart; i++) {
                             printf(img_slot_front, w * i, w, h);
-                            int n = cntstr[i] - '0';
+                            int n = cntstr[cntstrstart+i] - '0';
                             fwrite(theme_type[n], len_type[n], 1, stdout);
                             puts(img_slot_rear);
                         }
