@@ -116,12 +116,12 @@ static void return_count(char* name, char* theme) {
                     if (add_user(d->name, d->count + 1, fp)) http_error(HTTP500, "Add User Error.");
                     else {
                         fclose(fp);
-                        char cntstr[11];
-                        sprintf(cntstr, "%010u", d->count);
+                        char cntstrbuf[11];
+                        sprintf(cntstrbuf, "%010u", d->count);
                         free(spb);
-                        int cntstrstart = 9;
-                        while(cntstr[cntstrstart] != '0') cntstrstart--;
-                        if(cntstrstart > 1) cntstrstart--; // 保留 2 位 0
+                        char* cntstr = cntstrbuf+9;
+                        while(cntstr > cntstrbuf && *cntstr != '0') cntstr--;
+                        if(cntstr-cntstrbuf > 1) cntstr--; // 保留 2 位 0
                         int isbig = 0;
                         char** theme_type = mb;
                         uint16_t* len_type = mbl;
@@ -144,11 +144,11 @@ static void return_count(char* name, char* theme) {
                             h = H_SMALL;
                             head = svg_small;
                         }
-                        headers(get_content_len(isbig, len_type, cntstr+cntstrstart), "image/svg+xml");
+                        headers(get_content_len(isbig, len_type, cntstr), "image/svg+xml");
                         write(1, head, sizeof(svg_small)-1);
-                        for(int i = 0; i < 10-cntstrstart; i++) {
+                        for(int i = 0; cntstr[i]; i++) {
                             printf(img_slot_front, w * i, w, h);
-                            int n = cntstr[cntstrstart+i] - '0';
+                            int n = cntstr[i] - '0';
                             fwrite(theme_type[n], len_type[n], 1, stdout);
                             puts(img_slot_rear);
                         }
