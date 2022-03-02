@@ -89,7 +89,7 @@ static uint32_t get_content_len(int isbig, uint16_t* len_type, char* cntstr) {
         + 16 + isbig
         + sizeof(svg_tail) - 1;
     for(int i = 0; cntstr[i]; i++) {
-        len += len_type[cntstr[i] - '0'] + (sizeof(img_slot_front) + sizeof(img_slot_rear) - 1);
+        len += len_type[cntstr[i] - '0'] + (sizeof(img_slot_front) + sizeof(img_slot_rear) - 2);
     }
     return len;
 }
@@ -149,7 +149,7 @@ static void return_count(char* name, char* theme) {
                             printf(img_slot_front, w * i, w, h);
                             int n = cntstr[i] - '0';
                             fwrite(theme_type[n], len_type[n], 1, stdout);
-                            puts(img_slot_rear);
+                            printf(img_slot_rear);
                         }
                         fflush(stdout);
                         write(1, svg_tail, sizeof(svg_tail)-1);
