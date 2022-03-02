@@ -118,7 +118,7 @@ static void return_count(char* name, char* theme) {
                         sprintf(cntstrbuf, "%010u", d->count);
                         free(spb);
                         char* cntstr;
-                        for(cntstr = (char*)cntstrbuf+9; cntstr > (char*)cntstrbuf; cntstr--) if(*cntstr == '0') break;
+                        for(cntstr = (char*)cntstrbuf; cntstr < (char*)cntstrbuf+10; cntstr++) if(*cntstr != '0') break;
                         if(cntstr - (char*)cntstrbuf > 2) cntstr -= 2; // 保留 3 位 0
                         else cntstr = cntstrbuf; // 保留所有 0
                         int isbig = 0;
