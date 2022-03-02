@@ -50,7 +50,7 @@ const char svg_big[] =
                 "    <g>\n"
                 "      \n";
 const char img_slot_front[] = "      <image x=\"%d\" y=\"0\" width=\"%d\" height=\"%d\" xlink:href=\"";
-const char img_slot_rear[] = "\"></image>\n";
+const char img_slot_rear[] = "\"></image>";
 const char svg_tail[] = 
                 "    </g>\n"
                 "</svg>";

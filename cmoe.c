@@ -3,17 +3,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/file.h>
+#include <sys/uio.h>
 #include <unistd.h>
 #include "cmoe.h"
 
 static uint32_t* items_len;
 static COUNTER counter;
 
-#define ADD_HERDER(h) {\
+#define ADD_HEADER(h) {\
     strcpy(buf + offset, (h));\
     offset += sizeof((h)) - 1;\
 }
-#define ADD_HERDER_PARAM(h, p) {\
+#define ADD_HEADER_PARAM(h, p) {\
     sprintf(buf + offset, (h), (p));\
     offset += strlen(buf + offset);\
 }
@@ -22,20 +23,20 @@ static void headers(uint32_t content_len, const char* content_type) {
     char buf[1024];
     uint32_t offset = 0;
 
-    ADD_HERDER(HTTP200 SERVER_STRING CACHE_CTRL);
-    ADD_HERDER_PARAM(CONTENT_TYPE, content_type);
-    ADD_HERDER_PARAM(CONTENT_LEN "\r\n", content_len);
+    ADD_HEADER(HTTP200 SERVER_STRING CACHE_CTRL);
+    ADD_HEADER_PARAM(CONTENT_TYPE, content_type);
+    ADD_HEADER_PARAM(CONTENT_LEN "\r\n", content_len);
     content_len += offset;
-    write(1, (char*)&content_len, sizeof(uint32_t));
-    write(1, buf, offset);
+    struct iovec iov[2] = {{&content_len, sizeof(uint32_t)}, {buf, offset}};
+    writev(1, &iov, 2);
 }
 
 static void http_error(ERRCODE code, char* msg) {
     uint32_t len = strlen(msg) + typel[code];
     char* str = malloc(len);
     sprintf(str, types[code], msg);
-    write(1, (char*)&len, sizeof(uint32_t));
-    write(1, str, len);
+    struct iovec iov[2] = {{&len, sizeof(uint32_t)}, {str, len}};
+    writev(1, &iov, 2);
     free(str);
     exit(EXIT_FAILURE);
 }
@@ -43,12 +44,11 @@ static void http_error(ERRCODE code, char* msg) {
 static char* get_arg(const char* query) {
     int len = 0;
     while(query[len] && query[len] != '&') len++;
-    if(len > 0) {
-        char* name = malloc(len+1);
-        memcpy(name, query, len);
-        name[len] = 0;
-        return name;
-    } else return NULL;
+    if(len <= 0) return NULL;
+    char* name = malloc(len+1);
+    memcpy(name, query, len);
+    name[len] = 0;
+    return name;
 }
 
 static int del_user(FILE* fp, SIMPLE_PB* spb) {
@@ -57,25 +57,22 @@ static int del_user(FILE* fp, SIMPLE_PB* spb) {
     uint32_t this = next - spb->real_len;
     fseek(fp, 0, SEEK_END);
     uint32_t end = ftell(fp);
-    if(next == end) {
-        return ftruncate(fileno(fp), end - spb->real_len);
-    } else {
-        uint32_t cap = end - next;
-        char *data = malloc(cap);
-        if(data) {
-            fseek(fp, next, SEEK_SET);
-            if(fread(data, cap, 1, fp) == 1) {
-                if(!ftruncate(fileno(fp), end - spb->real_len)){
-                    fseek(fp, this, SEEK_SET);
-                    if(fwrite(data, cap, 1, fp) == 1) {
-                        free(data);
-                        fflush(fp);
-                        return 0;
-                    }
+    if(next == end) return ftruncate(fileno(fp), end - spb->real_len);
+    uint32_t cap = end - next;
+    char *data = malloc(cap);
+    if(data) {
+        fseek(fp, next, SEEK_SET);
+        if(fread(data, cap, 1, fp) == 1) {
+            if(!ftruncate(fileno(fp), end - spb->real_len)){
+                fseek(fp, this, SEEK_SET);
+                if(fwrite(data, cap, 1, fp) == 1) {
+                    free(data);
+                    fflush(fp);
+                    return 0;
                 }
             }
-            free(data);
         }
+        free(data);
     }
     return 2;
 }
@@ -89,7 +86,7 @@ static int add_user(char* name, uint32_t count, FILE* fp) {
 
 static uint32_t get_content_len(int isbig, uint16_t* len_type, char* cntstr) {
     uint32_t len = sizeof(svg_small) - 1
-        + (sizeof(img_slot_front) + sizeof(img_slot_rear) - 2) * 10
+        + (sizeof(img_slot_front) + sizeof(img_slot_rear) - 1) * 10
         + 16 + isbig
         + sizeof(svg_tail) - 1;
     for(int i = 0; i < 10; i++) {
@@ -120,6 +117,7 @@ static void return_count(char* name, char* theme) {
                         fclose(fp);
                         char cntstr[11];
                         sprintf(cntstr, "%010u", d->count);
+                        free(spb);
                         int isbig = 0;
                         char** theme_type = mb;
                         uint16_t* len_type = mbl;
@@ -148,19 +146,17 @@ static void return_count(char* name, char* theme) {
                             printf(img_slot_front, w * i, w, h);
                             int n = cntstr[i] - '0';
                             fwrite(theme_type[n], len_type[n], 1, stdout);
-                            printf(img_slot_rear);
+                            puts(img_slot_rear);
                         }
                         fflush(stdout);
                         write(1, svg_tail, sizeof(svg_tail)-1);
                     }
-                    free(spb);
-                    user_exist = 1;
                     return;
                 }
             } else free(spb);
         }
-        if(!user_exist) http_error(HTTP404, "No Such User.");
         fclose(fp);
+        http_error(HTTP404, "No Such User.");
     } else http_error(HTTP500, "Open File Error.");
 }
 
