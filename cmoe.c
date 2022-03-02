@@ -85,7 +85,7 @@ static int add_user(char* name, uint32_t count, FILE* fp) {
 }
 
 static uint32_t get_content_len(int isbig, uint16_t* len_type, char* cntstr) {
-    uint32_t len = sizeof(svg_small) - 1
+    uint32_t len = sizeof(svg_small)
         + 16 + isbig
         + sizeof(svg_tail) - 1;
     for(int i = 0; cntstr[i]; i++) {
@@ -119,7 +119,8 @@ static void return_count(char* name, char* theme) {
                         free(spb);
                         char* cntstr;
                         for(cntstr = cntstrbuf+9; cntstr > cntstrbuf; cntstr--) if(*cntstr == '0') break;
-                        if(cntstr != cntstrbuf) cntstr--; // 保留 2 位 0
+                        if(cntstr - cntstrbuf > 2) cntstr -= 2; // 保留 3 位 0
+                        else cntstr = cntstrbuf; // 保留所有 0
                         int isbig = 0;
                         char** theme_type = mb;
                         uint16_t* len_type = mbl;
@@ -143,7 +144,7 @@ static void return_count(char* name, char* theme) {
                             head = svg_small;
                         }
                         headers(get_content_len(isbig, len_type, cntstr), "image/svg+xml");
-                        write(1, head, sizeof(svg_small)-1);
+                        printf(head, w*(10+cntstrbuf-cntstr));
                         for(int i = 0; cntstr[i]; i++) {
                             printf(img_slot_front, w * i, w, h);
                             int n = cntstr[i] - '0';

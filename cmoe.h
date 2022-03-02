@@ -40,12 +40,12 @@ const uint16_t gbhl[] = {1550, 1702, 1870, 1778, 1618, 2370, 1830, 2234, 1914, 1
 #define H_BIG 150
 
 const char svg_small[] = 
-                "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"450\" height=\"100\" version=\"1.1\">\n"
+                "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"%d\" height=\"100\" version=\"1.1\">\n"
                 "    <title>Moe Count</title>\n"
                 "    <g>\n"
                 "      \n";
 const char svg_big[] = 
-                "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"680\" height=\"150\" version=\"1.1\">\n"
+                "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"%d\" height=\"150\" version=\"1.1\">\n"
                 "    <title>Moe Count</title>\n"
                 "    <g>\n"
                 "      \n";
