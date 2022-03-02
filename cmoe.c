@@ -118,8 +118,8 @@ static void return_count(char* name, char* theme) {
                         sprintf(cntstrbuf, "%010u", d->count);
                         free(spb);
                         char* cntstr;
-                        for(cntstr = cntstrbuf+9; cntstr > cntstrbuf; cntstr--) if(*cntstr == '0') break;
-                        if(cntstr - cntstrbuf > 2) cntstr -= 2; // 保留 3 位 0
+                        for(cntstr = (char*)cntstrbuf+9; cntstr > (char*)cntstrbuf; cntstr--) if(*cntstr == '0') break;
+                        if(cntstr - (char*)cntstrbuf > 2) cntstr -= 2; // 保留 3 位 0
                         else cntstr = cntstrbuf; // 保留所有 0
                         int isbig = 0;
                         char** theme_type = mb;
@@ -144,15 +144,14 @@ static void return_count(char* name, char* theme) {
                             head = svg_small;
                         }
                         headers(get_content_len(isbig, len_type, cntstr), "image/svg+xml");
-                        printf(head, w*(10+cntstrbuf-cntstr));
+                        printf(head, w*(10+(char*)cntstrbuf-cntstr));
                         for(int i = 0; cntstr[i]; i++) {
                             printf(img_slot_front, w * i, w, h);
                             int n = cntstr[i] - '0';
                             fwrite(theme_type[n], len_type[n], 1, stdout);
                             printf(img_slot_rear);
                         }
-                        fflush(stdout);
-                        write(1, svg_tail, sizeof(svg_tail)-1);
+                        printf(svg_tail);
                     }
                     return;
                 }
