@@ -144,7 +144,7 @@ static void return_count(char* name, char* theme) {
                             head = svg_small;
                         }
                         headers(get_content_len(isbig, len_type, cntstr), "image/svg+xml");
-                        printf(head, w*(10+cntstrbuf-cntstr));
+                        printf(head, w*(9+cntstrbuf-cntstr));
                         for(int i = 0; cntstr[i]; i++) {
                             printf(img_slot_front, w * i, w, h);
                             int n = cntstr[i] - '0';
