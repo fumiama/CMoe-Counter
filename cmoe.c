@@ -118,9 +118,10 @@ static void return_count(char* name, char* theme) {
                         sprintf(cntstrbuf, "%010u", d->count);
                         free(spb);
                         char* cntstr;
-                        for(cntstr = (char*)cntstrbuf; cntstr < (char*)cntstrbuf+10; cntstr++) if(*cntstr != '0') break;
-                        if(cntstr - (char*)cntstrbuf > 2) cntstr -= 2; // 保留 3 位 0
-                        else cntstr = cntstrbuf; // 保留所有 0
+                        for(int i = 0; i < 10; i++) if(cntstrbuf[i] != '0') {
+                            cntstr = cntstrbuf+(i>2)?(i-2):0;
+                            break;
+                        }
                         int isbig = 0;
                         char** theme_type = mb;
                         uint16_t* len_type = mbl;
