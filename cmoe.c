@@ -85,13 +85,14 @@ static int add_user(char* name, uint32_t count, FILE* fp) {
 }
 
 static uint32_t get_content_len(int isbig, uint16_t* len_type, char* cntstr) {
+    int i = 0;
     uint32_t len = sizeof(svg_small) - 1
-        + (sizeof(img_slot_front) + sizeof(img_slot_rear) - 1) * 10
         + 16 + isbig
         + sizeof(svg_tail) - 1;
-    for(int i = 0; cntstr[i]; i++) {
+    for(; cntstr[i]; i++) {
         len += len_type[cntstr[i] - '0'];
     }
+    len += (sizeof(img_slot_front) + sizeof(img_slot_rear) - 1) * i;
     return len;
 }
 
