@@ -89,7 +89,7 @@ static uint32_t get_content_len(int isbig, uint16_t* len_type, char* cntstr) {
         + (sizeof(img_slot_front) + sizeof(img_slot_rear) - 1) * 10
         + 16 + isbig
         + sizeof(svg_tail) - 1;
-    for(int i = 0; i < 10; i++) {
+    for(int i = 0; cntstr[i]; i++) {
         len += len_type[cntstr[i] - '0'];
     }
     return len;
@@ -118,6 +118,9 @@ static void return_count(char* name, char* theme) {
                         char cntstr[11];
                         sprintf(cntstr, "%010u", d->count);
                         free(spb);
+                        int cntstrstart = 9;
+                        while(cntstr[cntstrstart] != '0') cntstrstart--;
+                        if(cntstrstart > 1) cntstrstart--; // 保留 2 位 0
                         int isbig = 0;
                         char** theme_type = mb;
                         uint16_t* len_type = mbl;
@@ -140,9 +143,9 @@ static void return_count(char* name, char* theme) {
                             h = H_SMALL;
                             head = svg_small;
                         }
-                        headers(get_content_len(isbig, len_type, cntstr), "image/svg+xml");
+                        headers(get_content_len(isbig, len_type, cntstr+cntstrstart), "image/svg+xml");
                         write(1, head, sizeof(svg_small)-1);
-                        for(int i = 0; i < 10; i++) {
+                        for(int i = cntstrstart; i < 10; i++) {
                             printf(img_slot_front, w * i, w, h);
                             int n = cntstr[i] - '0';
                             fwrite(theme_type[n], len_type[n], 1, stdout);
@@ -182,7 +185,7 @@ static int name_exist(char* name) {
 }
 
 #define QS (argv[2])
-//Usage: cmoe method query_string
+// Usage: cmoe method query_string
 int main(int argc, char **argv) {
     if(argc == 3) {
         char* name = strstr(QS, "name=");
