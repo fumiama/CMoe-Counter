@@ -117,9 +117,9 @@ static void return_count(char* name, char* theme) {
                         char cntstrbuf[11];
                         sprintf(cntstrbuf, "%010u", d->count);
                         free(spb);
-                        char* cntstr;
+                        char* cntstr = cntstrbuf;
                         for(int i = 0; i < 10; i++) if(cntstrbuf[i] != '0') {
-                            cntstr = cntstrbuf+(i>2)?(i-2):0;
+                            if(i > 2) cntstr = cntstrbuf+i-2;
                             break;
                         }
                         int isbig = 0;
