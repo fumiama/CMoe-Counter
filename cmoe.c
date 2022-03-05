@@ -10,25 +10,19 @@
 static uint32_t* items_len;
 static COUNTER counter;
 
-#define ADD_HEADER(h) {\
-    strcpy(buf + offset, (h));\
-    offset += sizeof((h)) - 1;\
-}
-#define ADD_HEADER_PARAM(h, p) {\
-    sprintf(buf + offset, (h), (p));\
-    offset += strlen(buf + offset);\
-}
-
-static void headers(uint32_t content_len, const char* content_type) {
-    char buf[1024];
-    uint32_t offset = 0;
-
-    ADD_HEADER(HTTP200 SERVER_STRING CACHE_CTRL);
-    ADD_HEADER_PARAM(CONTENT_TYPE, content_type);
-    ADD_HEADER_PARAM(CONTENT_LEN "\r\n", content_len);
-    content_len += offset;
-    struct iovec iov[2] = {{&content_len, sizeof(uint32_t)}, {buf, offset}};
-    writev(1, &iov, 2);
+#define ADD_HEADER_PARAM(buf, offset, h, p) sprintf(buf + offset, (h), (p))
+#define HEADER(content_type) HTTP200 SERVER_STRING CACHE_CTRL CONTENT_TYPE(content_type)
+#define headers(content_len, content_type) (_headers(content_len, HEADER(content_type), sizeof(HEADER(content_type))-1))
+static void _headers(uint32_t content_len, const char* h, size_t hlen) {
+    char buf[64];
+    size_t offset = ADD_HEADER_PARAM(buf, 0, CONTENT_LEN "\r\n", content_len);
+    if(offset <= 0) {
+        write(1, "\0\0\0\0", 4);
+        exit(EXIT_FAILURE);
+    }
+    content_len += offset+hlen;
+    struct iovec iov[3] = {{&content_len, sizeof(uint32_t)}, {h, hlen}, {buf, offset}};
+    writev(1, &iov, 3);
 }
 
 static void http_error(ERRCODE code, char* msg) {
@@ -145,7 +139,7 @@ static void return_count(char* name, char* theme) {
                             h = H_SMALL;
                             head = svg_small;
                         }
-                        headers(get_content_len(isbig, len_type, cntstr), "image/svg+xml");
+                        headers(get_content_len(isbig, len_type, cntstr), image/svg+xml);
                         printf(head, w*(10+cntstrbuf-cntstr));
                         for(int i = 0; cntstr[i]; i++) {
                             printf(img_slot_front, w * i, w, h);
@@ -211,7 +205,7 @@ int main(int argc, char **argv) {
                                 add_user(name, 0, fp);
                                 fclose(fp);
                                 char* msg = "<P>Success.\r\n";
-                                headers(strlen(msg), "text/html");
+                                headers(strlen(msg), text/html);
                                 write(1, msg, strlen(msg));
                             } else http_error(HTTP500, "Open File Error.");
                         } else http_error(HTTP400, "Name Exist.");

@@ -24,7 +24,7 @@ const uint8_t typel[] = {59, 111, 69};
 enum ERRCODE {HTTP400, HTTP404, HTTP500};
 typedef enum ERRCODE ERRCODE;
 
-#define CONTENT_TYPE "Content-Type: %s\r\n"
+#define CONTENT_TYPE(x) "Content-Type: " #x "\r\n"
 #define CONTENT_LEN "Content-Length: %d\r\n"
 #define CACHE_CTRL "Cache-Control: max-age=0, no-cache, no-store, must-revalidate\r\n"
 
@@ -42,13 +42,11 @@ const uint16_t gbhl[] = {1550, 1702, 1870, 1778, 1618, 2370, 1830, 2234, 1914, 1
 const char svg_small[] = 
                 "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"%d\" height=\"100\" version=\"1.1\">\n"
                 "    <title>Moe Count</title>\n"
-                "    <g>\n"
-                "      \n";
+                "    <g>\n";
 const char svg_big[] = 
                 "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"%d\" height=\"150\" version=\"1.1\">\n"
                 "    <title>Moe Count</title>\n"
-                "    <g>\n"
-                "      \n";
+                "    <g>\n";
 const char img_slot_front[] = "      <image x=\"%d\" y=\"0\" width=\"%d\" height=\"%d\" xlink:href=\"";
 const char img_slot_rear[] = "\"></image>\n";
 const char svg_tail[] = 
