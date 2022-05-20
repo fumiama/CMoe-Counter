@@ -10,6 +10,9 @@
 static uint32_t* items_len;
 static COUNTER counter;
 
+static char* DATFILE = "dat.sp";
+static char* TOKEN = "fumiama";
+
 #define ADD_HEADER_PARAM(buf, offset, h, p) sprintf(buf + offset, (h), (p))
 #define HEADER(content_type) HTTP200 SERVER_STRING CACHE_CTRL CONTENT_TYPE(content_type)
 #define headers(content_len, content_type) (_headers(content_len, HEADER(content_type), sizeof(HEADER(content_type))-1))
@@ -183,6 +186,10 @@ static int name_exist(char* name) {
 // Usage: cmoe method query_string
 int main(int argc, char **argv) {
     if(argc == 3) {
+        char* str = getenv("DATFILE");
+        if(str != NULL) DATFILE = str;
+        str = getenv("TOKEN");
+        if(str != NULL) TOKEN = str;
         char* name = strstr(QS, "name=");
         items_len = align_struct(sizeof(COUNTER), 2, &counter.name, &counter.count);
         if(!items_len) http_error(HTTP500, "Align Struct Error.");

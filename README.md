@@ -40,11 +40,11 @@ make
 simple-http-server -d port folder
 ```
 ### 5. Enjoy it!
+You can change token and datafile by passing env `TOKEN` & `DATFILE`.
 
 ## API
 The API of CMoe is simpler than [Moe-counter](https://github.com/journey-ad/Moe-counter)
 ### 1. Register
-`token` is defined in `cmoe.h`
 ```
 http://yourdomain/cmoe?name=yourname&reg=token
 ```
