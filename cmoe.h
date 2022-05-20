@@ -3,9 +3,6 @@
 
 #include <stdint.h>
 
-#define DATFILE "dat.sp"
-#define TOKEN "fumiama"
-
 #define COUNTER_NAME_LEN 64
 struct COUNTER {
     char name[COUNTER_NAME_LEN];
