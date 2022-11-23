@@ -35,7 +35,6 @@ static void http_error(ERRCODE code, char* msg) {
     struct iovec iov[2] = {{&len, sizeof(uint32_t)}, {str, len}};
     writev(1, &iov, 2);
     free(str);
-    exit(EXIT_FAILURE);
 }
 
 static char* get_arg(const char* query) {
@@ -100,126 +99,149 @@ static uint32_t get_content_len(int isbig, uint16_t* len_type, char* cntstr) {
 static void return_count(char* name, char* theme) {
     FILE* fp = fopen(DATFILE, "rb+");
     if(!fp) fp = fopen(DATFILE, "wb+");
-    if(fp) {
-        flock(fileno(fp), LOCK_EX);
-        int ch, exist = 0, user_exist = 0;
-        while(has_next(fp, ch)) {
-            SIMPLE_PB *spb = get_pb(fp);
-            COUNTER *d = (COUNTER *)spb->target;
-            if (!strcmp(name, d->name)) {
-                if(del_user(fp, spb)) http_error(HTTP500, "Unable to Delete Old Data.");
-                else {
-                    if (add_user(d->name, d->count + 1, fp)) http_error(HTTP500, "Add User Error.");
-                    else {
-                        fclose(fp);
-                        char cntstrbuf[11];
-                        sprintf(cntstrbuf, "%010u", d->count);
-                        free(spb);
-                        char* cntstr = cntstrbuf;
-                        for(int i = 0; i < 10; i++) if(cntstrbuf[i] != '0') {
-                            if(i > 2) cntstr = cntstrbuf+i-2;
-                            break;
-                        }
-                        int isbig = 0;
-                        char** theme_type = mb;
-                        uint16_t* len_type = mbl;
-                        if(theme) {
-                            set_type("mbh", mbh, mbhl) else
-                            set_type("r34", r34, r34l) else
-                            set_type("gb", gb, gbl) else
-                            set_type("gbh", gbh, gbhl)
-                            isbig = (theme_type == gb || theme_type == gbh);
-                        }
-                        int w, h;
-                        char *head;
-                        if(isbig) {
-                            w = W_BIG;
-                            h = H_BIG;
-                            head = svg_big;
-                        }
-                        else {
-                            w = W_SMALL;
-                            h = H_SMALL;
-                            head = svg_small;
-                        }
-                        headers(get_content_len(isbig, len_type, cntstr), image/svg+xml);
-                        printf(head, w*(10+cntstrbuf-cntstr));
-                        for(int i = 0; cntstr[i]; i++) {
-                            printf(img_slot_front, w * i, w, h);
-                            int n = cntstr[i] - '0';
-                            fwrite(theme_type[n], len_type[n], 1, stdout);
-                            printf(img_slot_rear);
-                        }
-                        printf(svg_tail);
-                    }
-                    return;
-                }
-            } else free(spb);
+    if(!fp) {
+        http_error(HTTP500, "Open File Error.");
+        return;
+    }
+    flock(fileno(fp), LOCK_EX);
+    int ch, exist = 0, user_exist = 0;
+    char buf[sizeof(SIMPLE_PB)+sizeof(COUNTER)];
+    while(has_next(fp, ch)) {
+        SIMPLE_PB *spb = read_pb_into(fp, (SIMPLE_PB*)buf);
+        COUNTER *d = (COUNTER *)spb->target;
+        if (strcmp(name, d->name)) continue;
+        if(del_user(fp, spb)) {
+            http_error(HTTP500, "Unable to Delete Old Data.");
+            return;
+        }
+        if (add_user(d->name, d->count + 1, fp)) {
+            http_error(HTTP500, "Add User Error.");
+            return;
         }
         fclose(fp);
-        http_error(HTTP404, "No Such User.");
-    } else http_error(HTTP500, "Open File Error.");
+        char cntstrbuf[11];
+        sprintf(cntstrbuf, "%010u", d->count);
+        char* cntstr = cntstrbuf;
+        for(int i = 0; i < 10; i++) if(cntstrbuf[i] != '0') {
+            if(i > 2) cntstr = cntstrbuf+i-2;
+            break;
+        }
+        int isbig = 0;
+        char** theme_type = mb;
+        uint16_t* len_type = mbl;
+        if(theme) {
+            set_type("mbh", mbh, mbhl) else
+            set_type("r34", r34, r34l) else
+            set_type("gb", gb, gbl) else
+            set_type("gbh", gbh, gbhl)
+            isbig = (theme_type == gb || theme_type == gbh);
+        }
+        int w, h;
+        char *head;
+        if(isbig) {
+            w = W_BIG;
+            h = H_BIG;
+            head = svg_big;
+        }
+        else {
+            w = W_SMALL;
+            h = H_SMALL;
+            head = svg_small;
+        }
+        headers(get_content_len(isbig, len_type, cntstr), image/svg+xml);
+        printf(head, w*(10+cntstrbuf-cntstr));
+        for(int i = 0; cntstr[i]; i++) {
+            printf(img_slot_front, w * i, w, h);
+            int n = cntstr[i] - '0';
+            fwrite(theme_type[n], len_type[n], 1, stdout);
+            printf(img_slot_rear);
+        }
+        printf(svg_tail);
+        return;
+    }
+    fclose(fp);
+    http_error(HTTP404, "No Such User.");
 }
 
 static int name_exist(char* name) {
     FILE* fp = fopen(DATFILE, "rb+");
     if(!fp) fp = fopen(DATFILE, "wb+");
     if(fp) {
-        int ch, exist = 0;
-        flock(fileno(fp), LOCK_EX);
-        while(has_next(fp, ch)) {
-            SIMPLE_PB *spb = get_pb(fp);
-            COUNTER *d = (COUNTER *)spb->target;
-            if (!strcmp(name, d->name)) {
-                free(spb);
-                fclose(fp);
-                return 1;
-            }
-            else free(spb);
+        http_error(HTTP500, "Open File Error.");
+        exit(EXIT_FAILURE);
+    }
+    int ch, exist = 0;
+    char buf[sizeof(SIMPLE_PB)+sizeof(COUNTER)];
+    flock(fileno(fp), LOCK_EX);
+    while(has_next(fp, ch)) {
+        SIMPLE_PB *spb = read_pb_into(fp, (SIMPLE_PB*)buf);
+        COUNTER *d = (COUNTER *)spb->target;
+        if (!strcmp(name, d->name)) {
+            fclose(fp);
+            return 1;
         }
-        fclose(fp);
-        return 0;
-    } else http_error(HTTP500, "Open File Error.");
+    }
+    fclose(fp);
+    return 0;
 }
 
 #define QS (argv[2])
 // Usage: cmoe method query_string
 int main(int argc, char **argv) {
-    if(argc == 3) {
-        char* str = getenv("DATFILE");
-        if(str != NULL) DATFILE = str;
-        str = getenv("TOKEN");
-        if(str != NULL) TOKEN = str;
-        char* name = strstr(QS, "name=");
-        items_len = align_struct(sizeof(COUNTER), 2, &counter.name, &counter.count);
-        if(!items_len) http_error(HTTP500, "Align Struct Error.");
-        else if(name) {
-            name = get_arg(name + 5);
-            if(name) {
-                char* theme = strstr(QS, "theme=");
-                if(theme) {
-                    theme = get_arg(theme + 6);
-                }
-                char* reg = strstr(QS, "reg=");
-                if(reg) {
-                    reg = get_arg(reg + 4);
-                    if(reg) {
-                        if(strcmp(reg, TOKEN)) http_error(HTTP400, "Token Error.");
-                        else if(!name_exist(name)) {
-                            FILE* fp = fopen(DATFILE, "ab+");
-                            if(fp) {
-                                flock(fileno(fp), LOCK_EX);
-                                add_user(name, 0, fp);
-                                fclose(fp);
-                                char* msg = "<P>Success.\r\n";
-                                headers(strlen(msg), text/html);
-                                write(1, msg, strlen(msg));
-                            } else http_error(HTTP500, "Open File Error.");
-                        } else http_error(HTTP400, "Name Exist.");
-                    } else http_error(HTTP400, "Null Register Token.");
-                } else return_count(name, theme);
-            } else http_error(HTTP400, "Null Name Argument.");
-        } else http_error(HTTP400, "Name Argument Notfound.");
-    } else http_error(HTTP500, "Argument Count Error.");
-    return 0;
+    if(argc != 3) {
+        http_error(HTTP500, "Argument Count Error.");
+        return 1;
+    }
+    char* str = getenv("DATFILE");
+    if(str != NULL) DATFILE = str;
+    str = getenv("TOKEN");
+    if(str != NULL) TOKEN = str;
+    char* name = strstr(QS, "name=");
+    items_len = align_struct(sizeof(COUNTER), 2, &counter.name, &counter.count);
+    if(!items_len) {
+        http_error(HTTP500, "Align Struct Error.");
+        return 2;
+    }
+    if(!name) {
+        http_error(HTTP400, "Name Argument Notfound.");
+        return 3;
+    }
+    name = get_arg(name + 5);
+    if(!name) {
+        http_error(HTTP400, "Null Name Argument.");
+        return 4;
+    }
+    char* theme = strstr(QS, "theme=");
+    if(theme) {
+        theme = get_arg(theme + 6);
+    }
+    char* reg = strstr(QS, "reg=");
+    if (!reg) {
+        return_count(name, theme);
+        return 0;
+    }
+    reg = get_arg(reg + 4);
+    if (!reg) {
+        http_error(HTTP400, "Null Register Token.");
+        return 5;
+    }
+    if(strcmp(reg, TOKEN)) {
+        http_error(HTTP400, "Token Error.");
+        return 6;
+    }
+    if(name_exist(name)) {
+        http_error(HTTP400, "Name Exist.");
+        return 7;
+    }
+    FILE* fp = fopen(DATFILE, "ab+");
+    if (!fp) {
+        http_error(HTTP500, "Open File Error.");
+        return 8;
+    }
+    flock(fileno(fp), LOCK_EX);
+    add_user(name, 0, fp);
+    fclose(fp);
+    char* msg = "<P>Success.\r\n";
+    headers(strlen(msg), text/html);
+    return write(1, msg, strlen(msg)) <= 0;
 }
