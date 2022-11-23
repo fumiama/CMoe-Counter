@@ -4,11 +4,11 @@
 #include <stdint.h>
 
 #define COUNTER_NAME_LEN 64
-struct COUNTER {
+struct counter_t {
     char name[COUNTER_NAME_LEN];
     uint32_t count;
 };
-typedef struct COUNTER COUNTER;
+typedef struct counter_t counter_t;
 
 #define SERVER_STRING "Server: CMoe Counter by Fumiama/1.0\r\n"
 
@@ -18,8 +18,8 @@ typedef struct COUNTER COUNTER;
 #define H500 "HTTP/1.0 500 Internal Server Error\r\nContent-Type: text/html\r\n\r\n<P>%s\r\n"
 const char* types[] = {H400, H404, H500};
 const uint8_t typel[] = {59, 111, 69};
-enum ERRCODE {HTTP400, HTTP404, HTTP500};
-typedef enum ERRCODE ERRCODE;
+enum errcode_enum_t {HTTP400, HTTP404, HTTP500};
+typedef enum errcode_enum_t errcode_enum_t;
 
 #define CONTENT_TYPE(x) "Content-Type: " #x "\r\n"
 #define CONTENT_LEN "Content-Length: %d\r\n"
