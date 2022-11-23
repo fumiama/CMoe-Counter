@@ -8,7 +8,7 @@
 #include "cmoe.h"
 
 static uint32_t* items_len;
-static COUNTER counter;
+static counter_t counter;
 
 static char* DATFILE = "dat.sp";
 static char* TOKEN = "fumiama";
@@ -28,7 +28,7 @@ static void _headers(uint32_t content_len, const char* h, size_t hlen) {
     writev(1, &iov, 3);
 }
 
-static void http_error(ERRCODE code, char* msg) {
+static void http_error(errcode_enum_t code, char* msg) {
     uint32_t len = strlen(msg) + typel[code];
     char* str = malloc(len);
     sprintf(str, types[code], msg);
@@ -48,7 +48,7 @@ static char* get_arg(const char* query) {
 }
 
 static int del_user(FILE* fp, SIMPLE_PB* spb) {
-    COUNTER *d = (COUNTER *)spb->target;
+    counter_t *d = (counter_t *)spb->target;
     uint32_t next = ftell(fp);
     uint32_t this = next - spb->real_len;
     fseek(fp, 0, SEEK_END);
@@ -77,7 +77,7 @@ static int add_user(char* name, uint32_t count, FILE* fp) {
     counter.count = count;
     strncpy(counter.name, name, COUNTER_NAME_LEN-1);
     fseek(fp, 0, SEEK_END);
-    return !set_pb(fp, items_len, sizeof(COUNTER), &counter);
+    return !set_pb(fp, items_len, sizeof(counter_t), &counter);
 }
 
 static uint32_t get_content_len(int isbig, uint16_t* len_type, char* cntstr) {
@@ -105,10 +105,10 @@ static void return_count(char* name, char* theme) {
     }
     flock(fileno(fp), LOCK_EX);
     int ch, exist = 0, user_exist = 0;
-    char buf[sizeof(SIMPLE_PB)+sizeof(COUNTER)];
+    char buf[sizeof(SIMPLE_PB)+sizeof(counter_t)];
     while(has_next(fp, ch)) {
         SIMPLE_PB *spb = read_pb_into(fp, (SIMPLE_PB*)buf);
-        COUNTER *d = (COUNTER *)spb->target;
+        counter_t *d = (counter_t *)spb->target;
         if (strcmp(name, d->name)) continue;
         if(del_user(fp, spb)) {
             http_error(HTTP500, "Unable to Delete Old Data.");
@@ -171,11 +171,11 @@ static int name_exist(char* name) {
         exit(EXIT_FAILURE);
     }
     int ch, exist = 0;
-    char buf[sizeof(SIMPLE_PB)+sizeof(COUNTER)];
+    char buf[sizeof(SIMPLE_PB)+sizeof(counter_t)];
     flock(fileno(fp), LOCK_EX);
     while(has_next(fp, ch)) {
         SIMPLE_PB *spb = read_pb_into(fp, (SIMPLE_PB*)buf);
-        COUNTER *d = (COUNTER *)spb->target;
+        counter_t *d = (counter_t *)spb->target;
         if (!strcmp(name, d->name)) {
             fclose(fp);
             return 1;
@@ -197,7 +197,7 @@ int main(int argc, char **argv) {
     str = getenv("TOKEN");
     if(str != NULL) TOKEN = str;
     char* name = strstr(QS, "name=");
-    items_len = align_struct(sizeof(COUNTER), 2, &counter.name, &counter.count);
+    items_len = align_struct(sizeof(counter_t), 2, &counter.name, &counter.count);
     if(!items_len) {
         http_error(HTTP500, "Align Struct Error.");
         return 2;
