@@ -10,8 +10,8 @@
 static uint32_t* items_len;
 static counter_t counter;
 
-static char* DATFILE = "dat.sp";
-static char* TOKEN = "fumiama";
+static char* datfile = "dat.sp";
+static char* token = "fumiama";
 
 #define ADD_HEADER_PARAM(buf, offset, h, p) sprintf(buf + offset, (h), (p))
 #define HEADER(content_type) HTTP200 SERVER_STRING CACHE_CTRL CONTENT_TYPE(content_type)
@@ -97,8 +97,8 @@ static uint32_t get_content_len(int isbig, uint16_t* len_type, char* cntstr) {
                                 len_type = l;\
                             }
 static void return_count(char* name, char* theme) {
-    FILE* fp = fopen(DATFILE, "rb+");
-    if(!fp) fp = fopen(DATFILE, "wb+");
+    FILE* fp = fopen(datfile, "rb+");
+    if(!fp) fp = fopen(datfile, "wb+");
     if(!fp) {
         http_error(HTTP500, "Open File Error.");
         return;
@@ -164,8 +164,8 @@ static void return_count(char* name, char* theme) {
 }
 
 static int name_exist(char* name) {
-    FILE* fp = fopen(DATFILE, "rb+");
-    if(!fp) fp = fopen(DATFILE, "wb+");
+    FILE* fp = fopen(datfile, "rb+");
+    if(!fp) fp = fopen(datfile, "wb+");
     if(fp) {
         http_error(HTTP500, "Open File Error.");
         exit(EXIT_FAILURE);
@@ -193,9 +193,9 @@ int main(int argc, char **argv) {
         return 1;
     }
     char* str = getenv("DATFILE");
-    if(str != NULL) DATFILE = str;
+    if(str != NULL) datfile = str;
     str = getenv("TOKEN");
-    if(str != NULL) TOKEN = str;
+    if(str != NULL) token = str;
     char* name = strstr(QS, "name=");
     items_len = align_struct(sizeof(counter_t), 2, &counter.name, &counter.count);
     if(!items_len) {
@@ -225,7 +225,7 @@ int main(int argc, char **argv) {
         http_error(HTTP400, "Null Register Token.");
         return 5;
     }
-    if(strcmp(reg, TOKEN)) {
+    if(strcmp(reg, token)) {
         http_error(HTTP400, "Token Error.");
         return 6;
     }
@@ -233,7 +233,7 @@ int main(int argc, char **argv) {
         http_error(HTTP400, "Name Exist.");
         return 7;
     }
-    FILE* fp = fopen(DATFILE, "ab+");
+    FILE* fp = fopen(datfile, "ab+");
     if (!fp) {
         http_error(HTTP500, "Open File Error.");
         return 8;
