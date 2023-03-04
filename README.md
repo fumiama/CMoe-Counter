@@ -18,9 +18,9 @@
 
 ## Usage
 ### 1. Install [simple-http-server](https://github.com/fumiama/simple-http-server)
-Follow the instructions in [this repo](https://github.com/fumiama/simple-http-server) to install it.
+Follow the instructions in that repo to install it.
 ### 2. Install [simple-protobuf](https://github.com/fumiama/simple-protobuf)
-Follow the instructions in [this repo](https://github.com/fumiama/simple-protobuf) to install it.
+Follow the instructions in that repo to install it.
 ### 3. Install CMoe
 ```bash
 git clone https://github.com/fumiama/CMoe-Counter.git
