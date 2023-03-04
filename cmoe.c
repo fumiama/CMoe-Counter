@@ -13,6 +13,8 @@ static counter_t counter;
 static char* datfile = "dat.sp";
 static char* token = "fumiama";
 
+static FILE* fp;
+
 #define ADD_HEADER_PARAM(buf, offset, h, p) sprintf(buf + offset, (h), (p))
 #define HEADER(content_type) HTTP200 SERVER_STRING CACHE_CTRL CONTENT_TYPE(content_type)
 #define headers(content_len, content_type) (_headers(content_len, HEADER(content_type), sizeof(HEADER(content_type))-1))
@@ -24,16 +26,16 @@ static void _headers(uint32_t content_len, const char* h, size_t hlen) {
         exit(EXIT_FAILURE);
     }
     content_len += offset+hlen;
-    struct iovec iov[3] = {{&content_len, sizeof(uint32_t)}, {h, hlen}, {buf, offset}};
-    writev(1, &iov, 3);
+    struct iovec iov[3] = {{&content_len, sizeof(uint32_t)}, {(void*)h, hlen}, {(void*)buf, offset}};
+    writev(1, (const struct iovec *)&iov, 3);
 }
 
 static void http_error(errcode_enum_t code, char* msg) {
     uint32_t len = strlen(msg) + typel[code];
     char* str = malloc(len);
     sprintf(str, types[code], msg);
-    struct iovec iov[2] = {{&len, sizeof(uint32_t)}, {str, len}};
-    writev(1, &iov, 2);
+    struct iovec iov[2] = {{(void*)&len, sizeof(uint32_t)}, {(void*)str, len}};
+    writev(1, (const struct iovec *)&iov, 2);
     free(str);
 }
 
@@ -93,17 +95,10 @@ static uint32_t get_content_len(int isbig, uint16_t* len_type, char* cntstr) {
 
 #define has_next(fp, ch) ((ch=getc(fp)),(feof(fp)?0:(ungetc(ch,fp),1)))
 #define set_type(name, t, l) if(!strcmp(theme, name)) {\
-                                theme_type = t;\
-                                len_type = l;\
+                                theme_type = (char**)t;\
+                                len_type = (uint16_t*)l;\
                             }
-static void return_count(char* name, char* theme) {
-    FILE* fp = fopen(datfile, "rb+");
-    if(!fp) fp = fopen(datfile, "wb+");
-    if(!fp) {
-        http_error(HTTP500, "Open File Error.");
-        return;
-    }
-    flock(fileno(fp), LOCK_EX);
+static void return_count(FILE* fp, char* name, char* theme) {
     int ch, exist = 0, user_exist = 0;
     char buf[sizeof(SIMPLE_PB)+sizeof(counter_t)];
     while(has_next(fp, ch)) {
@@ -118,7 +113,6 @@ static void return_count(char* name, char* theme) {
             http_error(HTTP500, "Add User Error.");
             return;
         }
-        fclose(fp);
         char cntstrbuf[11];
         sprintf(cntstrbuf, "%010u", d->count);
         char* cntstr = cntstrbuf;
@@ -127,26 +121,26 @@ static void return_count(char* name, char* theme) {
             break;
         }
         int isbig = 0;
-        char** theme_type = mb;
-        uint16_t* len_type = mbl;
+        char** theme_type = (char**)mb;
+        uint16_t* len_type = (uint16_t*)mbl;
         if(theme) {
             set_type("mbh", mbh, mbhl) else
             set_type("r34", r34, r34l) else
             set_type("gb", gb, gbl) else
             set_type("gbh", gbh, gbhl)
-            isbig = (theme_type == gb || theme_type == gbh);
+            isbig = (theme_type == (char**)gb || theme_type == (char**)gbh);
         }
         int w, h;
         char *head;
         if(isbig) {
             w = W_BIG;
             h = H_BIG;
-            head = svg_big;
+            head = (char*)svg_big;
         }
         else {
             w = W_SMALL;
             h = H_SMALL;
-            head = svg_small;
+            head = (char*)svg_small;
         }
         headers(get_content_len(isbig, len_type, cntstr), image/svg+xml);
         printf(head, w*(10+cntstrbuf-cntstr));
@@ -159,38 +153,28 @@ static void return_count(char* name, char* theme) {
         printf(svg_tail);
         return;
     }
-    fclose(fp);
     http_error(HTTP404, "No Such User.");
 }
 
-static int name_exist(char* name) {
-    FILE* fp = fopen(datfile, "rb+");
-    if(!fp) fp = fopen(datfile, "wb+");
-    if(fp) {
-        http_error(HTTP500, "Open File Error.");
-        exit(EXIT_FAILURE);
-    }
+static int name_exist(FILE* fp, char* name) {
     int ch, exist = 0;
     char buf[sizeof(SIMPLE_PB)+sizeof(counter_t)];
-    flock(fileno(fp), LOCK_EX);
     while(has_next(fp, ch)) {
         SIMPLE_PB *spb = read_pb_into(fp, (SIMPLE_PB*)buf);
         counter_t *d = (counter_t *)spb->target;
-        if (!strcmp(name, d->name)) {
-            fclose(fp);
-            return 1;
-        }
+        if (!strcmp(name, d->name)) return 1;
     }
-    fclose(fp);
     return 0;
 }
+
+#define create_or_open(fp, filename) ((fp = fopen(filename, "rb+"))?(fp):(fp = fopen(filename, "wb+")))
 
 #define QS (argv[2])
 // Usage: cmoe method query_string
 int main(int argc, char **argv) {
     if(argc != 3) {
         http_error(HTTP500, "Argument Count Error.");
-        return 1;
+        return -1;
     }
     char* str = getenv("DATFILE");
     if(str != NULL) datfile = str;
@@ -217,7 +201,16 @@ int main(int argc, char **argv) {
     }
     char* reg = strstr(QS, "reg=");
     if (!reg) {
-        return_count(name, theme);
+        if(!create_or_open(fp, datfile)) {
+            http_error(HTTP500, "Open File Error.");
+            return -2;
+        }
+        if(flock(fileno(fp), LOCK_EX)) {
+            http_error(HTTP500, "Lock File Error.");
+            return -3;
+        }
+        return_count(fp, name, theme);
+        fclose(fp); fp = NULL;
         return 0;
     }
     reg = get_arg(reg + 4);
@@ -229,19 +222,36 @@ int main(int argc, char **argv) {
         http_error(HTTP400, "Token Error.");
         return 6;
     }
-    if(name_exist(name)) {
+    if(!create_or_open(fp, datfile)) {
+        http_error(HTTP500, "Open File Error.");
+        return -4;
+    }
+    if(flock(fileno(fp), LOCK_EX)) {
+        http_error(HTTP500, "Lock File Error.");
+        return -5;
+    }
+    if(name_exist(fp, name)) {
+        fclose(fp); fp = NULL;
         http_error(HTTP400, "Name Exist.");
         return 7;
     }
-    FILE* fp = fopen(datfile, "ab+");
+    fclose(fp); fp = NULL;
+    fp = fopen(datfile, "ab+");
     if (!fp) {
         http_error(HTTP500, "Open File Error.");
-        return 8;
+        return -6;
     }
-    flock(fileno(fp), LOCK_EX);
+    if(flock(fileno(fp), LOCK_EX)) {
+        http_error(HTTP500, "Lock File Error.");
+        return -7;
+    }
     add_user(name, 0, fp);
-    fclose(fp);
+    fclose(fp); fp = NULL;
     char* msg = "<P>Success.\r\n";
     headers(strlen(msg), text/html);
     return write(1, msg, strlen(msg)) <= 0;
+}
+
+static void __attribute__((destructor)) defer_close_fp() {
+    if(fp) fclose(fp);
 }
