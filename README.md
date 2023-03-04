@@ -16,8 +16,6 @@
 ##### gelbooru(gb)
 ![Gelbooru](https://count.getloli.com/get/@demo?theme=gelbooru)</details>
 
-## [Demo](http://sayuri.fumiama.top/)
-
 ## Usage
 ### 1. Install [simple-http-server](https://github.com/fumiama/simple-http-server)
 Follow the instructions in [this repo](https://github.com/fumiama/simple-http-server) to install it.
