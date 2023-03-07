@@ -18,27 +18,24 @@ static FILE* fp;
 #define ADD_HEADER_PARAM(buf, offset, h, p) sprintf(buf + offset, (h), (p))
 #define HEADER(content_type) HTTP200 SERVER_STRING CACHE_CTRL CONTENT_TYPE(content_type)
 #define headers(content_len, content_type) (_headers(content_len, HEADER(content_type), sizeof(HEADER(content_type))-1))
-static void _headers(uint32_t content_len, const char* h, size_t hlen) {
+static int _headers(uint32_t content_len, const char* h, size_t hlen) {
     char buf[64];
     size_t offset = ADD_HEADER_PARAM(buf, 0, CONTENT_LEN "\r\n", content_len);
-    if(offset <= 0) {
-        write(1, "\0\0\0\0", 4);
-        exit(EXIT_FAILURE);
-    }
+    if(offset <= 0) return -1;
     content_len += offset+hlen;
     struct iovec iov[3] = {{&content_len, sizeof(uint32_t)}, {(void*)h, hlen}, {(void*)buf, offset}};
-    writev(1, (const struct iovec *)&iov, 3);
+    return writev(1, (const struct iovec *)&iov, 3) <= 0;
 }
 
-static void http_error(errcode_enum_t code, char* msg) {
+static inline void http_error(errcode_enum_t code, char* msg) {
     uint32_t len = strlen(msg) + typel[code];
-    char* str = malloc(len);
+    char str[len];
     sprintf(str, types[code], msg);
     struct iovec iov[2] = {{(void*)&len, sizeof(uint32_t)}, {(void*)str, len}};
     writev(1, (const struct iovec *)&iov, 2);
-    free(str);
 }
 
+// get_arg used malloc but has never freed
 static char* get_arg(const char* query) {
     int len = 0;
     while(query[len] && query[len] != '&') len++;
@@ -75,14 +72,14 @@ static int del_user(FILE* fp, SIMPLE_PB* spb) {
     return 2;
 }
 
-static int add_user(char* name, uint32_t count, FILE* fp) {
+static inline int add_user(char* name, uint32_t count, FILE* fp) {
     counter.count = count;
     strncpy(counter.name, name, COUNTER_NAME_LEN-1);
     fseek(fp, 0, SEEK_END);
     return !set_pb(fp, items_len, sizeof(counter_t), &counter);
 }
 
-static uint32_t get_content_len(int isbig, uint16_t* len_type, char* cntstr) {
+static inline uint32_t get_content_len(int isbig, uint16_t* len_type, char* cntstr) {
     uint32_t len = sizeof(svg_small) // small & big has the same len
         + sizeof(svg_tail) - 1;
     for(int i = 0; cntstr[i]; i++) {
@@ -142,7 +139,10 @@ static void return_count(FILE* fp, char* name, char* theme) {
             h = H_SMALL;
             head = (char*)svg_small;
         }
-        headers(get_content_len(isbig, len_type, cntstr), image/svg+xml);
+        if(headers(get_content_len(isbig, len_type, cntstr), image/svg+xml)) {
+            write(1, "\0\0\0\0", 4);
+            return;
+        }
         printf(head, w*(10+cntstrbuf-cntstr));
         for(int i = 0; cntstr[i]; i++) {
             printf(img_slot_front, w * i, w, h);
@@ -248,7 +248,10 @@ int main(int argc, char **argv) {
     add_user(name, 0, fp);
     fclose(fp); fp = NULL;
     char* msg = "<P>Success.\r\n";
-    headers(strlen(msg), text/html);
+    if(headers(strlen(msg), text/html)) {
+        write(1, "\0\0\0\0", 4);
+        return 8;
+    }
     return write(1, msg, strlen(msg)) <= 0;
 }
 
