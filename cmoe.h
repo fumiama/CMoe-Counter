@@ -21,7 +21,7 @@ const uint8_t typel[] = {59, 111, 69};
 enum errcode_enum_t {HTTP400, HTTP404, HTTP500};
 typedef enum errcode_enum_t errcode_enum_t;
 
-#define CONTENT_TYPE(x) "Content-Type: " #x "\r\n"
+#define CONTENT_TYPE(x) "Content-Type: " x "\r\n"
 #define CONTENT_LEN "Content-Length: %d\r\n"
 #define CACHE_CTRL "Cache-Control: max-age=0, no-cache, no-store, must-revalidate\r\n"
 

@@ -139,7 +139,7 @@ static void return_count(FILE* fp, char* name, char* theme) {
             h = H_SMALL;
             head = (char*)svg_small;
         }
-        if(headers(get_content_len(isbig, len_type, cntstr), image/svg+xml)) {
+        if(headers(get_content_len(isbig, len_type, cntstr), "image/svg+xml")) {
             write(1, "\0\0\0\0", 4);
             return;
         }
@@ -210,6 +210,7 @@ int main(int argc, char **argv) {
             return -3;
         }
         return_count(fp, name, theme);
+        flock(fileno(fp), LOCK_UN);
         fclose(fp); fp = NULL;
         return 0;
     }
@@ -231,10 +232,12 @@ int main(int argc, char **argv) {
         return -5;
     }
     if(name_exist(fp, name)) {
+        flock(fileno(fp), LOCK_UN);
         fclose(fp); fp = NULL;
         http_error(HTTP400, "Name Exist.");
         return 7;
     }
+    flock(fileno(fp), LOCK_UN);
     fclose(fp); fp = NULL;
     fp = fopen(datfile, "ab+");
     if (!fp) {
@@ -246,9 +249,10 @@ int main(int argc, char **argv) {
         return -7;
     }
     add_user(name, 0, fp);
+    flock(fileno(fp), LOCK_UN);
     fclose(fp); fp = NULL;
     char* msg = "<P>Success.\r\n";
-    if(headers(strlen(msg), text/html)) {
+    if(headers(strlen(msg), "text/html")) {
         write(1, "\0\0\0\0", 4);
         return 8;
     }
@@ -256,5 +260,8 @@ int main(int argc, char **argv) {
 }
 
 static void __attribute__((destructor)) defer_close_fp() {
-    if(fp) fclose(fp);
+    if(fp) {
+        flock(fileno(fp), LOCK_UN);
+        fclose(fp);
+    }
 }
