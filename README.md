@@ -2,7 +2,7 @@
 
 多种风格可选的萌萌计数器的简易C语言版本
 
-<div align=center> <a href="#"> <img src="http://cmoe.azurewebsites.net/cmoe?name=cmoe&theme=gb" /> </a> </div>
+<div align=center> <a href="#"> <img src="https://counter.seku.su/cmoe?name=cmoe&theme=gb" /> </a> </div>
 
 <details>
 <summary>More theme</summary>
