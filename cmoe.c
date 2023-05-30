@@ -169,6 +169,12 @@ static int name_exist(FILE* fp, char* name) {
 
 #define create_or_open(fp, filename) ((fp = fopen(filename, "rb+"))?(fp):(fp = fopen(filename, "wb+")))
 
+#define flease(fp) { \
+    fflush(fp); \
+    flock(fileno(fp), LOCK_UN); \
+    fclose(fp); fp = NULL; \
+}
+
 #define QS (argv[2])
 // Usage: cmoe method query_string
 int main(int argc, char **argv) {
@@ -210,8 +216,7 @@ int main(int argc, char **argv) {
             return -3;
         }
         return_count(fp, name, theme);
-        flock(fileno(fp), LOCK_UN);
-        fclose(fp); fp = NULL;
+        flease(fp);
         return 0;
     }
     reg = get_arg(reg + 4);
@@ -232,13 +237,11 @@ int main(int argc, char **argv) {
         return -5;
     }
     if(name_exist(fp, name)) {
-        flock(fileno(fp), LOCK_UN);
-        fclose(fp); fp = NULL;
+        flease(fp);
         http_error(HTTP400, "Name Exist.");
         return 7;
     }
-    flock(fileno(fp), LOCK_UN);
-    fclose(fp); fp = NULL;
+    flease(fp);
     fp = fopen(datfile, "ab+");
     if (!fp) {
         http_error(HTTP500, "Open File Error.");
@@ -249,8 +252,7 @@ int main(int argc, char **argv) {
         return -7;
     }
     add_user(name, 0, fp);
-    flock(fileno(fp), LOCK_UN);
-    fclose(fp); fp = NULL;
+    flease(fp);
     char* msg = "<P>Success.\r\n";
     if(headers(strlen(msg), "text/html")) {
         write(1, "\0\0\0\0", 4);
@@ -260,8 +262,5 @@ int main(int argc, char **argv) {
 }
 
 static void __attribute__((destructor)) defer_close_fp() {
-    if(fp) {
-        flock(fileno(fp), LOCK_UN);
-        fclose(fp);
-    }
+    if(fp) flease(fp);
 }
