@@ -241,16 +241,7 @@ int main(int argc, char **argv) {
         http_error(HTTP400, "Name Exist.");
         return 7;
     }
-    flease(fp);
-    fp = fopen(datfile, "ab+");
-    if (!fp) {
-        http_error(HTTP500, "Open File Error.");
-        return -6;
-    }
-    if(flock(fileno(fp), LOCK_EX)) {
-        http_error(HTTP500, "Lock File Error.");
-        return -7;
-    }
+    fseek(fp, 0, SEEK_END);
     add_user(name, 0, fp);
     flease(fp);
     char* msg = "<P>Success.\r\n";
