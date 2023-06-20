@@ -13,8 +13,6 @@ static counter_t counter;
 static char* datfile = "dat.sp";
 static char* token = "fumiama";
 
-static FILE* fp;
-
 #define ADD_HEADER_PARAM(buf, offset, h, p) sprintf(buf + offset, (h), (p))
 #define HEADER(content_type) HTTP200 SERVER_STRING CACHE_CTRL CONTENT_TYPE(content_type)
 #define headers(content_len, content_type) (_headers(content_len, HEADER(content_type), sizeof(HEADER(content_type))-1))
@@ -167,13 +165,7 @@ static int name_exist(FILE* fp, char* name) {
     return 0;
 }
 
-#define create_or_open(fp, filename) ((fp = fopen(filename, "rb+"))?(fp):(fp = fopen(filename, "wb+")))
-
-#define flease(fp) { \
-    fflush(fp); \
-    flock(fileno(fp), LOCK_UN); \
-    fclose(fp); fp = NULL; \
-}
+#define create_or_open(filename) (open(filename, O_CREAT|O_RDWR, 0600))
 
 #define QS (argv[2])
 // Usage: cmoe method query_string
@@ -206,17 +198,19 @@ int main(int argc, char **argv) {
         theme = get_arg(theme + 6);
     }
     char* reg = strstr(QS, "reg=");
+    int fd; FILE* fp;
     if (!reg) {
-        if(!create_or_open(fp, datfile)) {
+        if((fd=create_or_open(datfile)) < 0) {
             http_error(HTTP500, "Open File Error.");
             return -2;
         }
-        if(flock(fileno(fp), LOCK_EX)) {
+        if(flock(fd, LOCK_EX)) {
             http_error(HTTP500, "Lock File Error.");
             return -3;
         }
+        fp = fdopen(fd, "rb+");
         return_count(fp, name, theme);
-        flease(fp);
+        fclose(fp);
         return 0;
     }
     reg = get_arg(reg + 4);
@@ -228,30 +222,27 @@ int main(int argc, char **argv) {
         http_error(HTTP400, "Token Error.");
         return 6;
     }
-    if(!create_or_open(fp, datfile)) {
+    if((fd=create_or_open(datfile)) < 0) {
         http_error(HTTP500, "Open File Error.");
         return -4;
     }
-    if(flock(fileno(fp), LOCK_EX)) {
+    if(flock(fd, LOCK_EX)) {
         http_error(HTTP500, "Lock File Error.");
         return -5;
     }
+    fp = fdopen(fd, "rb+");
     if(name_exist(fp, name)) {
-        flease(fp);
+        fclose(fp);
         http_error(HTTP400, "Name Exist.");
         return 7;
     }
     fseek(fp, 0, SEEK_END);
     add_user(name, 0, fp);
-    flease(fp);
+    fclose(fp);
     char* msg = "<P>Success.\r\n";
     if(headers(strlen(msg), "text/html")) {
         write(1, "\0\0\0\0", 4);
         return 8;
     }
     return write(1, msg, strlen(msg)) <= 0;
-}
-
-static void __attribute__((destructor)) defer_close_fp() {
-    if(fp) flease(fp);
 }
