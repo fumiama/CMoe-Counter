@@ -210,7 +210,7 @@ int main(int argc, char **argv) {
         }
         fp = fdopen(fd, "rb+");
         return_count(fp, name, theme);
-        fclose(fp);
+        fflush(fp); flock(fd, LOCK_UN); close(fd);
         return 0;
     }
     reg = get_arg(reg + 4);
@@ -232,13 +232,13 @@ int main(int argc, char **argv) {
     }
     fp = fdopen(fd, "rb+");
     if(name_exist(fp, name)) {
-        fclose(fp);
+        fflush(fp); flock(fd, LOCK_UN); close(fd);
         http_error(HTTP400, "Name Exist.");
         return 7;
     }
     fseek(fp, 0, SEEK_END);
     add_user(name, 0, fp);
-    fclose(fp);
+    fflush(fp); flock(fd, LOCK_UN); close(fd);
     char* msg = "<P>Success.\r\n";
     if(headers(strlen(msg), "text/html")) {
         write(1, "\0\0\0\0", 4);
