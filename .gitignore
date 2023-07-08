@@ -5,3 +5,7 @@ build
 
 # misc
 .DS_Store
+
+#for test.c
+/test
+/testlog.txt

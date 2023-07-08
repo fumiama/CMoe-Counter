@@ -9,6 +9,7 @@
 
 static uint32_t* items_len;
 static counter_t counter;
+static FILE* fp;
 
 static char* datfile = "dat.sp";
 static char* token = "fumiama";
@@ -19,7 +20,7 @@ static char* token = "fumiama";
 static int _headers(uint32_t content_len, const char* h, size_t hlen) {
     char buf[64];
     size_t offset = ADD_HEADER_PARAM(buf, 0, CONTENT_LEN "\r\n", content_len);
-    if(offset <= 0) return -1;
+    if (offset <= 0) return -1;
     content_len += offset+hlen;
     struct iovec iov[3] = {{&content_len, sizeof(uint32_t)}, {(void*)h, hlen}, {(void*)buf, offset}};
     return writev(1, (const struct iovec *)&iov, 3) <= 0;
@@ -36,29 +37,29 @@ static inline void http_error(errcode_enum_t code, char* msg) {
 // get_arg used malloc but has never freed
 static char* get_arg(const char* query) {
     int len = 0;
-    while(query[len] && query[len] != '&') len++;
-    if(len <= 0) return NULL;
+    while (query[len] && query[len] != '&') len++;
+    if (len <= 0) return NULL;
     char* name = malloc(len+1);
     memcpy(name, query, len);
     name[len] = 0;
     return name;
 }
 
-static int del_user(FILE* fp, SIMPLE_PB* spb) {
+static int del_user(FILE* fp, simple_pb_t* spb) {
     counter_t *d = (counter_t *)spb->target;
     uint32_t next = ftell(fp);
     uint32_t this = next - spb->real_len;
-    fseek(fp, 0, SEEK_END);
+    if (fseek(fp, 0, SEEK_END) < 0) return -2;
     uint32_t end = ftell(fp);
-    if(next == end) return ftruncate(fileno(fp), end - spb->real_len);
+    if (next == end) return ftruncate(fileno(fp), end - spb->real_len);
     uint32_t cap = end - next;
     char *data = malloc(cap);
-    if(data) {
-        fseek(fp, next, SEEK_SET);
-        if(fread(data, cap, 1, fp) == 1) {
-            if(!ftruncate(fileno(fp), end - spb->real_len)){
-                fseek(fp, this, SEEK_SET);
-                if(fwrite(data, cap, 1, fp) == 1) {
+    if (data) {
+        if (fseek(fp, next, SEEK_SET)) return -3;
+        if (fread(data, cap, 1, fp) == 1) {
+            if (!ftruncate(fileno(fp), end - spb->real_len)){
+                if (fseek(fp, this, SEEK_SET)) return -4;
+                if (fwrite(data, cap, 1, fp) == 1) {
                     free(data);
                     fflush(fp);
                     return 0;
@@ -73,34 +74,34 @@ static int del_user(FILE* fp, SIMPLE_PB* spb) {
 static inline int add_user(char* name, uint32_t count, FILE* fp) {
     counter.count = count;
     strncpy(counter.name, name, COUNTER_NAME_LEN-1);
-    fseek(fp, 0, SEEK_END);
+    if (fseek(fp, 0, SEEK_END) < 0) return -2;
     return !set_pb(fp, items_len, sizeof(counter_t), &counter);
 }
 
 static inline uint32_t get_content_len(int isbig, uint16_t* len_type, char* cntstr) {
     uint32_t len = sizeof(svg_small) // small & big has the same len
         + sizeof(svg_tail) - 1;
-    for(int i = 0; cntstr[i]; i++) {
+    for (int i = 0; cntstr[i]; i++) {
         len += len_type[cntstr[i] - '0'] + (sizeof(img_slot_front) + sizeof(img_slot_rear) - 2);
-        if(i > 0) len++;
-        if(i > 2-isbig) len++;
+        if (i > 0) len++;
+        if (i > 2-isbig) len++;
     }
     return len;
 }
 
 #define has_next(fp, ch) ((ch=getc(fp)),(feof(fp)?0:(ungetc(ch,fp),1)))
-#define set_type(name, t, l) if(!strcmp(theme, name)) {\
+#define set_type(name, t, l) if (!strcmp(theme, name)) {\
                                 theme_type = (char**)t;\
                                 len_type = (uint16_t*)l;\
                             }
 static void return_count(FILE* fp, char* name, char* theme) {
     int ch, exist = 0, user_exist = 0;
-    char buf[sizeof(SIMPLE_PB)+sizeof(counter_t)];
-    while(has_next(fp, ch)) {
-        SIMPLE_PB *spb = read_pb_into(fp, (SIMPLE_PB*)buf);
+    char buf[sizeof(simple_pb_t)+sizeof(counter_t)];
+    while (has_next(fp, ch)) {
+        simple_pb_t *spb = read_pb_into(fp, (simple_pb_t*)buf);
         counter_t *d = (counter_t *)spb->target;
         if (strcmp(name, d->name)) continue;
-        if(del_user(fp, spb)) {
+        if (del_user(fp, spb)) {
             http_error(HTTP500, "Unable to Delete Old Data.");
             return;
         }
@@ -111,14 +112,14 @@ static void return_count(FILE* fp, char* name, char* theme) {
         char cntstrbuf[11];
         sprintf(cntstrbuf, "%010u", d->count);
         char* cntstr = cntstrbuf;
-        for(int i = 0; i < 10; i++) if(cntstrbuf[i] != '0') {
-            if(i > 2) cntstr = cntstrbuf+i-2;
+        for (int i = 0; i < 10; i++) if (cntstrbuf[i] != '0') {
+            if (i > 2) cntstr = cntstrbuf+i-2;
             break;
         }
         int isbig = 0;
         char** theme_type = (char**)mb;
         uint16_t* len_type = (uint16_t*)mbl;
-        if(theme) {
+        if (theme) {
             set_type("mbh", mbh, mbhl) else
             set_type("r34", r34, r34l) else
             set_type("gb", gb, gbl) else
@@ -127,7 +128,7 @@ static void return_count(FILE* fp, char* name, char* theme) {
         }
         int w, h;
         char *head;
-        if(isbig) {
+        if (isbig) {
             w = W_BIG;
             h = H_BIG;
             head = (char*)svg_big;
@@ -137,12 +138,12 @@ static void return_count(FILE* fp, char* name, char* theme) {
             h = H_SMALL;
             head = (char*)svg_small;
         }
-        if(headers(get_content_len(isbig, len_type, cntstr), "image/svg+xml")) {
+        if (headers(get_content_len(isbig, len_type, cntstr), "image/svg+xml")) {
             write(1, "\0\0\0\0", 4);
             return;
         }
         printf(head, w*(10+cntstrbuf-cntstr));
-        for(int i = 0; cntstr[i]; i++) {
+        for (int i = 0; cntstr[i]; i++) {
             printf(img_slot_front, w * i, w, h);
             int n = cntstr[i] - '0';
             fwrite(theme_type[n], len_type[n], 1, stdout);
@@ -156,9 +157,9 @@ static void return_count(FILE* fp, char* name, char* theme) {
 
 static int name_exist(FILE* fp, char* name) {
     int ch, exist = 0;
-    char buf[sizeof(SIMPLE_PB)+sizeof(counter_t)];
-    while(has_next(fp, ch)) {
-        SIMPLE_PB *spb = read_pb_into(fp, (SIMPLE_PB*)buf);
+    char buf[sizeof(simple_pb_t)+sizeof(counter_t)];
+    while (has_next(fp, ch)) {
+        simple_pb_t *spb = read_pb_into(fp, (simple_pb_t*)buf);
         counter_t *d = (counter_t *)spb->target;
         if (!strcmp(name, d->name)) return 1;
     }
@@ -170,47 +171,46 @@ static int name_exist(FILE* fp, char* name) {
 #define QS (argv[2])
 // Usage: cmoe method query_string
 int main(int argc, char **argv) {
-    if(argc != 3) {
+    if (argc != 3) {
         http_error(HTTP500, "Argument Count Error.");
         return -1;
     }
     char* str = getenv("DATFILE");
-    if(str != NULL) datfile = str;
+    if (str != NULL) datfile = str;
     str = getenv("TOKEN");
-    if(str != NULL) token = str;
+    if (str != NULL) token = str;
     char* name = strstr(QS, "name=");
     items_len = align_struct(sizeof(counter_t), 2, &counter.name, &counter.count);
-    if(!items_len) {
+    if (!items_len) {
         http_error(HTTP500, "Align Struct Error.");
         return 2;
     }
-    if(!name) {
+    if (!name) {
         http_error(HTTP400, "Name Argument Notfound.");
         return 3;
     }
     name = get_arg(name + 5);
-    if(!name) {
+    if (!name) {
         http_error(HTTP400, "Null Name Argument.");
         return 4;
     }
     char* theme = strstr(QS, "theme=");
-    if(theme) {
+    if (theme) {
         theme = get_arg(theme + 6);
     }
     char* reg = strstr(QS, "reg=");
-    int fd; FILE* fp;
+    int fd; 
     if (!reg) {
-        if((fd=create_or_open(datfile)) < 0) {
+        if ((fd=create_or_open(datfile)) < 0) {
             http_error(HTTP500, "Open File Error.");
             return -2;
         }
-        if(flock(fd, LOCK_EX)) {
+        if (flock(fd, LOCK_EX)) {
             http_error(HTTP500, "Lock File Error.");
             return -3;
         }
         fp = fdopen(fd, "rb+");
         return_count(fp, name, theme);
-        fflush(fp); flock(fd, LOCK_UN); close(fd);
         return 0;
     }
     reg = get_arg(reg + 4);
@@ -218,31 +218,33 @@ int main(int argc, char **argv) {
         http_error(HTTP400, "Null Register Token.");
         return 5;
     }
-    if(strcmp(reg, token)) {
+    if (strcmp(reg, token)) {
         http_error(HTTP400, "Token Error.");
         return 6;
     }
-    if((fd=create_or_open(datfile)) < 0) {
+    if ((fd=create_or_open(datfile)) < 0) {
         http_error(HTTP500, "Open File Error.");
         return -4;
     }
-    if(flock(fd, LOCK_EX)) {
+    if (flock(fd, LOCK_EX)) {
         http_error(HTTP500, "Lock File Error.");
         return -5;
     }
     fp = fdopen(fd, "rb+");
-    if(name_exist(fp, name)) {
-        fflush(fp); flock(fd, LOCK_UN); close(fd);
+    if (name_exist(fp, name)) {
         http_error(HTTP400, "Name Exist.");
         return 7;
     }
     fseek(fp, 0, SEEK_END);
     add_user(name, 0, fp);
-    fflush(fp); flock(fd, LOCK_UN); close(fd);
     char* msg = "<P>Success.\r\n";
-    if(headers(strlen(msg), "text/html")) {
+    if (headers(strlen(msg), "text/html")) {
         write(1, "\0\0\0\0", 4);
         return 8;
     }
     return write(1, msg, strlen(msg)) <= 0;
+}
+
+static void __attribute__((destructor)) defer_close_fp() {
+    if (fp) fclose(fp);
 }

@@ -10,9 +10,9 @@ static counter_t counter;
 
 static FILE* fp;
 
-static char buf[sizeof(SIMPLE_PB)+sizeof(counter_t)];
+static char buf[sizeof(simple_pb_t)+sizeof(counter_t)];
 
-static int del_user(FILE* fp, SIMPLE_PB* spb) {
+static int del_user(FILE* fp, simple_pb_t* spb) {
     counter_t *d = (counter_t *)spb->target;
     uint32_t next = ftell(fp);
     uint32_t this = next - spb->real_len;
@@ -99,7 +99,7 @@ int main(int argc, char** argv) {
                     return 5;
                 }
                 while(has_next(fp, c)) {
-                    SIMPLE_PB *spb = read_pb_into(fp, (SIMPLE_PB*)buf);
+                    simple_pb_t *spb = read_pb_into(fp, (simple_pb_t*)buf);
                     counter_t *d = (counter_t *)spb->target;
                     if (strcmp(counter.name, d->name)) continue;
                     if(del_user(fp, spb)) {
@@ -127,7 +127,7 @@ int main(int argc, char** argv) {
                     return 7;
                 }
                 while(has_next(fp, c)) {
-                    SIMPLE_PB *spb = read_pb_into(fp, (SIMPLE_PB*)buf);
+                    simple_pb_t *spb = read_pb_into(fp, (simple_pb_t*)buf);
                     counter_t *d = (counter_t *)spb->target;
                     if (strstr(d->name, counter.name)) {
                         if(del_user(fp, spb)) {
@@ -151,7 +151,7 @@ int main(int argc, char** argv) {
                     return 5;
                 }
                 while(has_next(fp, c)) {
-                    SIMPLE_PB *spb = read_pb_into(fp, (SIMPLE_PB*)buf);
+                    simple_pb_t *spb = read_pb_into(fp, (simple_pb_t*)buf);
                     counter_t *d = (counter_t *)spb->target;
                     if (strcmp(counter.name, d->name)) continue;
                     printf("user '%s' = %u.\n", d->name, d->count);
@@ -170,7 +170,7 @@ int main(int argc, char** argv) {
                     return 7;
                 }
                 while(has_next(fp, c)) {
-                    SIMPLE_PB *spb = read_pb_into(fp, (SIMPLE_PB*)buf);
+                    simple_pb_t *spb = read_pb_into(fp, (simple_pb_t*)buf);
                     counter_t *d = (counter_t *)spb->target;
                     if (d->count < counter.count) {
                         printf("'%s' = %u\n", d->name, d->count);
@@ -195,7 +195,7 @@ int main(int argc, char** argv) {
                     return 7;
                 }
                 while(has_next(fp, c)) {
-                    SIMPLE_PB *spb = read_pb_into(fp, (SIMPLE_PB*)buf);
+                    simple_pb_t *spb = read_pb_into(fp, (simple_pb_t*)buf);
                     counter_t *d = (counter_t *)spb->target;
                     if (d->count < counter.count) {
                         if(del_user(fp, spb)) {
@@ -222,7 +222,7 @@ int main(int argc, char** argv) {
                     return 7;
                 }
                 while(has_next(fp, c)) {
-                    SIMPLE_PB *spb = read_pb_into(fp, (SIMPLE_PB*)buf);
+                    simple_pb_t *spb = read_pb_into(fp, (simple_pb_t*)buf);
                     counter_t *d = (counter_t *)spb->target;
                     if (!counter.name[0] || strstr(d->name, counter.name)) {
                         printf("'%s' = %u\n", d->name, d->count);
