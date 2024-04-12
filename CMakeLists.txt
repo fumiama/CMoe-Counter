@@ -15,5 +15,5 @@ add_executable(cmoeditor editor.c)
 target_link_libraries(cmoe spb)
 target_link_libraries(cmoeditor spb)
 
-INSTALL(TARGETS cmoe RUNTIME DESTINATION bin)
+#INSTALL(TARGETS cmoe RUNTIME DESTINATION bin)
 INSTALL(TARGETS cmoeditor RUNTIME DESTINATION bin)

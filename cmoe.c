@@ -90,10 +90,7 @@ static inline uint32_t get_content_len(int isbig, uint16_t* len_type, char* cnts
 }
 
 #define has_next(fp, ch) ((ch=getc(fp)),(feof(fp)?0:(ungetc(ch,fp),1)))
-#define set_type(name, t, l) if (!strcmp(theme, name)) {\
-                                theme_type = (char**)t;\
-                                len_type = (uint16_t*)l;\
-                            }
+#define cmp_and_set_type(t) if (!strcmp(theme, #t)) { theme_type = (char**)t; len_type = (uint16_t*)t##l; }
 static void return_count(FILE* fp, char* name, char* theme) {
     int ch, exist = 0, user_exist = 0;
     char buf[sizeof(simple_pb_t)+sizeof(counter_t)];
@@ -120,10 +117,11 @@ static void return_count(FILE* fp, char* name, char* theme) {
         char** theme_type = (char**)mb;
         uint16_t* len_type = (uint16_t*)mbl;
         if (theme) {
-            set_type("mbh", mbh, mbhl) else
-            set_type("r34", r34, r34l) else
-            set_type("gb", gb, gbl) else
-            set_type("gbh", gbh, gbhl)
+            cmp_and_set_type(mbh) else
+            cmp_and_set_type(r34) else
+            cmp_and_set_type(gb) else
+            cmp_and_set_type(gbh) else
+            cmp_and_set_type(asl)
             isbig = (theme_type == (char**)gb || theme_type == (char**)gbh);
         }
         int w, h;
