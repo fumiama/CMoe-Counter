@@ -199,7 +199,7 @@ int main(int argc, char **argv) {
         theme = get_arg(theme + 6);
     }
     char* reg = strstr(QS, "reg=");
-    int fd; 
+    int fd;
     if (!reg) {
         if ((fd=create_or_open(datfile)) < 0) {
             http_error(HTTP500, "Open File Error.");
