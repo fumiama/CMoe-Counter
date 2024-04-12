@@ -83,7 +83,8 @@ static inline int add_user(char* name, uint32_t count, FILE* fp) {
 static inline uint32_t get_content_len(int isbig, uint16_t* len_type, char* cntstr) {
     uint32_t len = sizeof(svg_small) // small & big has the same len
         + sizeof(svg_tail) - 1;
-    for (int i = 0; cntstr[i]; i++) {
+    int i = 0;
+    for (; cntstr[i]; i++) {
         len += len_type[cntstr[i] - '0'] + (sizeof(img_slot_front) + sizeof(img_slot_rear) - 2);
         if (i > 0) len++;
         if (i > 2-isbig) len++;
@@ -111,7 +112,8 @@ static void return_count(FILE* fp, char* name, char* theme) {
         char cntstrbuf[11];
         sprintf(cntstrbuf, "%010u", d->count);
         char* cntstr = cntstrbuf;
-        for (int i = 0; i < 10; i++) if (cntstrbuf[i] != '0') {
+        int i = 0;
+        for (; i < 10; i++) if (cntstrbuf[i] != '0') {
             if (i > 2) cntstr = cntstrbuf+i-2;
             break;
         }
@@ -143,7 +145,7 @@ static void return_count(FILE* fp, char* name, char* theme) {
             return;
         }
         printf(head, w*(10+cntstrbuf-cntstr));
-        for (int i = 0; cntstr[i]; i++) {
+        for (i = 0; cntstr[i]; i++) {
             printf(img_slot_front, w * i, w, h);
             int n = cntstr[i] - '0';
             fwrite(theme_type[n], len_type[n], 1, stdout);
