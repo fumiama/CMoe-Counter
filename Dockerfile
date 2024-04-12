@@ -37,7 +37,7 @@ COPY ./CMakeLists.txt .
 
 RUN mkdir build \
   && cd build \
-  && cmake .. \
+  && cmake -DBUILD=docker .. \
   && make install
 
 FROM alpine:latest
