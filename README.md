@@ -53,7 +53,7 @@ http://yourdomain/cmoe?name=yourname&reg=token
 ```
 ### 2. Refer
 ```
-http://yourdomain/cmoe?name=yourname(&theme=mb/mbh/gb/gbh/r34)
+http://yourdomain/cmoe?name=yourname(&theme=mb/mbh/gb/gbh/r34/nix)
 ```
 That's all.
 ## Credits
