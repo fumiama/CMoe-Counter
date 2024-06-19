@@ -8,13 +8,18 @@
 <summary>More theme</summary>
 
 ##### moebooru(mb)
-![moebooru](https://count.getloli.com/get/@demo?theme=moebooru)
+![moebooru](https://counter.seku.su/cmoe?name=demo&theme=mb)
 
 ##### rule34(r34)
-![Rule34](https://count.getloli.com/get/@demo?theme=rule34)
+![Rule34](https://counter.seku.su/cmoe?name=demo&theme=r34)
 
 ##### gelbooru(gb)
-![Gelbooru](https://count.getloli.com/get/@demo?theme=gelbooru)</details>
+![Gelbooru](https://counter.seku.su/cmoe?name=demo&theme=gb)
+
+##### nixie(nix)
+![Nixie Tube](https://counter.seku.su/cmoe?name=demo&theme=nix)
+
+</details>
 
 ## Usage
 ### 1. Install [simple-http-server](https://github.com/fumiama/simple-http-server)

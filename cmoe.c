@@ -80,21 +80,84 @@ static inline int add_user(char* name, uint32_t count, FILE* fp) {
     return !set_pb(fp, items_len, sizeof(counter_t), &counter);
 }
 
-static inline uint32_t get_content_len(int isbig, uint16_t* len_type, char* cntstr) {
+static inline uint32_t get_content_len(int isbigtiny, uint16_t* len_type, char* cntstr) {
+    static int lendiff[] = {
+        0|(0<<8)|(-1u<<16), 1|(1<<8)|(0<<16), 1|(2<<8)|(1<<16), 2|(2<<8)|(1<<16), 2|(2<<8)|(1<<16),
+        2|(2<<8)|(1<<16),  2|(2<<8)|(1<<16), 2|(2<<8)|(1<<16), 2|(2<<8)|(1<<16), 2|(2<<8)|(1<<16)
+    };
     uint32_t len = sizeof(svg_small) // small & big has the same len
         + sizeof(svg_tail) - 1;
+    if (isbigtiny&2) len--; // is tiny
     int i = 0;
     for (; cntstr[i]; i++) {
         len += len_type[cntstr[i] - '0'] + (sizeof(img_slot_front) + sizeof(img_slot_rear) - 2);
-        if (i > 0) len++;
-        if (i > 2-isbig) len++;
+        len += (uint32_t)((int)((int8_t)((lendiff[i]>>(isbigtiny*8))&0xff)));
     }
     return len;
 }
 
-#define has_next(fp, ch) ((ch=getc(fp)),(feof(fp)?0:(ungetc(ch,fp),1)))
 #define cmp_and_set_type(t) if (!strcmp(theme, #t)) { theme_type = (char**)t; len_type = (uint16_t*)t##l; }
+static void draw(int count, char* theme) {
+    char cntstrbuf[11];
+    sprintf(cntstrbuf, "%010u", count);
+    char* cntstr = cntstrbuf;
+    int i = 0;
+    for (; i < 10; i++) if (cntstrbuf[i] != '0') {
+        if (i > 2) cntstr = cntstrbuf+i-2;
+        break;
+    }
+    int isbig = 0;
+    char** theme_type = (char**)mb;
+    uint16_t* len_type = (uint16_t*)mbl;
+    if (theme) {
+        cmp_and_set_type(mbh) else
+        cmp_and_set_type(r34) else
+        cmp_and_set_type(gb) else
+        cmp_and_set_type(gbh) else
+        cmp_and_set_type(asl) else
+        cmp_and_set_type(nix)
+        isbig = (
+            (theme_type == (char**)gb || theme_type == (char**)gbh) |
+            ((theme_type == (char**)nix) << 1)
+        );
+    }
+    int w, h;
+    char *head;
+    if (isbig&1) {
+        w = W_BIG;
+        h = H_BIG;
+        head = (char*)svg_big;
+    }
+    else if (isbig&2) {
+        w = W_TINY;
+        h = H_TINY;
+        head = (char*)svg_tiny;
+    }
+    else {
+        w = W_SMALL;
+        h = H_SMALL;
+        head = (char*)svg_small;
+    }
+    if (headers(get_content_len(isbig, len_type, cntstr), "image/svg+xml")) {
+        write(1, "\0\0\0\0", 4);
+        return;
+    }
+    printf(head, w*(10+cntstrbuf-cntstr));
+    for (i = 0; cntstr[i]; i++) {
+        printf(img_slot_front, w * i, w, h);
+        int n = cntstr[i] - '0';
+        fwrite(theme_type[n], len_type[n], 1, stdout);
+        printf(img_slot_rear);
+    }
+    printf(svg_tail);
+}
+
+#define has_next(fp, ch) ((ch=getc(fp)),(feof(fp)?0:(ungetc(ch,fp),1)))
 static void return_count(FILE* fp, char* name, char* theme) {
+    if (!strcmp(name, "demo")) {
+        draw(123456789, theme);
+        return;
+    }
     int ch, exist = 0, user_exist = 0;
     char buf[sizeof(simple_pb_t)+sizeof(counter_t)];
     while (has_next(fp, ch)) {
@@ -109,55 +172,16 @@ static void return_count(FILE* fp, char* name, char* theme) {
             http_error(HTTP500, "Add User Error.");
             return;
         }
-        char cntstrbuf[11];
-        sprintf(cntstrbuf, "%010u", d->count);
-        char* cntstr = cntstrbuf;
-        int i = 0;
-        for (; i < 10; i++) if (cntstrbuf[i] != '0') {
-            if (i > 2) cntstr = cntstrbuf+i-2;
-            break;
-        }
-        int isbig = 0;
-        char** theme_type = (char**)mb;
-        uint16_t* len_type = (uint16_t*)mbl;
-        if (theme) {
-            cmp_and_set_type(mbh) else
-            cmp_and_set_type(r34) else
-            cmp_and_set_type(gb) else
-            cmp_and_set_type(gbh) else
-            cmp_and_set_type(asl)
-            isbig = (theme_type == (char**)gb || theme_type == (char**)gbh);
-        }
-        int w, h;
-        char *head;
-        if (isbig) {
-            w = W_BIG;
-            h = H_BIG;
-            head = (char*)svg_big;
-        }
-        else {
-            w = W_SMALL;
-            h = H_SMALL;
-            head = (char*)svg_small;
-        }
-        if (headers(get_content_len(isbig, len_type, cntstr), "image/svg+xml")) {
-            write(1, "\0\0\0\0", 4);
-            return;
-        }
-        printf(head, w*(10+cntstrbuf-cntstr));
-        for (i = 0; cntstr[i]; i++) {
-            printf(img_slot_front, w * i, w, h);
-            int n = cntstr[i] - '0';
-            fwrite(theme_type[n], len_type[n], 1, stdout);
-            printf(img_slot_rear);
-        }
-        printf(svg_tail);
+        draw(d->count, theme);
         return;
     }
     http_error(HTTP404, "No Such User.");
 }
 
 static int name_exist(FILE* fp, char* name) {
+    if (!strcmp(name, "demo")) {
+        return 1;
+    }
     int ch, exist = 0;
     char buf[sizeof(simple_pb_t)+sizeof(counter_t)];
     while (has_next(fp, ch)) {
