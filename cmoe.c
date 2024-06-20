@@ -86,18 +86,20 @@ static inline uint32_t get_content_len(int isbigtiny, uint16_t* len_type, char* 
         2|(2<<8)|(1<<16),  2|(2<<8)|(1<<16), 2|(2<<8)|(1<<16), 2|(2<<8)|(1<<16), 2|(2<<8)|(1<<16)
     };
     uint32_t len = sizeof(svg_small) // small & big has the same len
-        + sizeof(svg_tail) - 1;
-    if (isbigtiny&2) len--; // is tiny
+        + sizeof(svg_tail) - 1 + 1; // +1 for no \n
+    if (isbigtiny&FLAG_TINY) len--; // is tiny
+    uint32_t frontsz = ((isbigtiny&FLAG_SVG)?sizeof(svg_slot_front):sizeof(img_slot_front)) - 1;
+    uint32_t rearsz = ((isbigtiny&FLAG_SVG)?(sizeof(svg_slot_rear)-3+8):sizeof(img_slot_rear)) - 1 + 1; // +1 for no \n
     int i = 0;
     for (; cntstr[i]; i++) {
-        len += len_type[cntstr[i] - '0'] + (sizeof(img_slot_front) + sizeof(img_slot_rear) - 2);
+        len += (uint32_t)len_type[cntstr[i] - '0'] + frontsz + rearsz;
         len += (uint32_t)((int)((int8_t)((lendiff[i]>>(isbigtiny*8))&0xff)));
     }
     return len;
 }
 
 #define cmp_and_set_type(t) if (!strcmp(theme, #t)) { theme_type = (char**)t; len_type = (uint16_t*)t##l; }
-static void draw(int count, char* theme) {
+static void draw(int count, char* theme, uint32_t color) {
     char cntstrbuf[11];
     sprintf(cntstrbuf, "%010u", count);
     char* cntstr = cntstrbuf;
@@ -106,7 +108,7 @@ static void draw(int count, char* theme) {
         if (i > 2) cntstr = cntstrbuf+i-2;
         break;
     }
-    int isbig = 0;
+    int isbigtiny = 0;
     char** theme_type = (char**)mb;
     uint16_t* len_type = (uint16_t*)mbl;
     if (theme) {
@@ -115,20 +117,22 @@ static void draw(int count, char* theme) {
         cmp_and_set_type(gb) else
         cmp_and_set_type(gbh) else
         cmp_and_set_type(asl) else
-        cmp_and_set_type(nix)
-        isbig = (
+        cmp_and_set_type(nix) else
+        cmp_and_set_type(mbs)
+        isbigtiny = (
             (theme_type == (char**)gb || theme_type == (char**)gbh) |
-            ((theme_type == (char**)nix) << 1)
+            ((theme_type == (char**)nix || theme_type == (char**)mbs) << 1) |
+            ((theme_type == (char**)mbs) << 2)
         );
     }
     int w, h;
     char *head;
-    if (isbig&1) {
+    if (isbigtiny&FLAG_BIG) {
         w = W_BIG;
         h = H_BIG;
         head = (char*)svg_big;
     }
-    else if (isbig&2) {
+    else if (isbigtiny&FLAG_TINY) {
         w = W_TINY;
         h = H_TINY;
         head = (char*)svg_tiny;
@@ -138,24 +142,33 @@ static void draw(int count, char* theme) {
         h = H_SMALL;
         head = (char*)svg_small;
     }
-    if (headers(get_content_len(isbig, len_type, cntstr), "image/svg+xml")) {
+    if (headers(get_content_len(isbigtiny, len_type, cntstr), "image/svg+xml")) {
         write(1, "\0\0\0\0", 4);
         return;
     }
+
+    const char* slot_front = (isbigtiny&FLAG_SVG)?svg_slot_front:img_slot_front;
+    const char* slot_rear;
+    if (isbigtiny&FLAG_SVG) {
+        char rearbuf[sizeof(svg_slot_rear)-3+8];
+        snprintf(rearbuf, sizeof(rearbuf), svg_slot_rear, color?color:SVG_DEFAULT_COLOR);
+        slot_rear = rearbuf;
+    } else slot_rear = img_slot_rear;
+
     printf(head, w*(10+cntstrbuf-cntstr));
     for (i = 0; cntstr[i]; i++) {
-        printf(img_slot_front, w * i, w, h);
+        printf(slot_front, w * i, w, h);
         int n = cntstr[i] - '0';
         fwrite(theme_type[n], len_type[n], 1, stdout);
-        printf(img_slot_rear);
+        puts(slot_rear); // +1 \n for each turn
     }
-    printf(svg_tail);
+    puts(svg_tail); // +1 \n
 }
 
 #define has_next(fp, ch) ((ch=getc(fp)),(feof(fp)?0:(ungetc(ch,fp),1)))
-static void return_count(FILE* fp, char* name, char* theme) {
+static void return_count(FILE* fp, char* name, char* theme, uint32_t color) {
     if (!strcmp(name, "demo")) {
-        draw(123456789, theme);
+        draw(123456789, theme, color);
         return;
     }
     int ch, exist = 0, user_exist = 0;
@@ -172,7 +185,7 @@ static void return_count(FILE* fp, char* name, char* theme) {
             http_error(HTTP500, "Add User Error.");
             return;
         }
-        draw(d->count, theme);
+        draw(d->count, theme, color);
         return;
     }
     http_error(HTTP404, "No Such User.");
@@ -224,6 +237,12 @@ int main(int argc, char **argv) {
     if (theme) {
         theme = get_arg(theme + 6);
     }
+    char* colors = strstr(QS, "color=");
+    uint32_t color = 0;
+    if (colors) {
+        colors = get_arg(colors + 6);
+        sscanf(colors, "%x", &color);
+    }
     char* reg = strstr(QS, "reg=");
     int fd;
     if (!reg) {
@@ -236,7 +255,7 @@ int main(int argc, char **argv) {
             return -3;
         }
         fp = fdopen(fd, "rb+");
-        return_count(fp, name, theme);
+        return_count(fp, name, theme, color);
         return 0;
     }
     reg = get_arg(reg + 4);

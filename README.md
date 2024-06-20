@@ -19,6 +19,9 @@
 ##### nixie(nix)
 ![Nixie Tube](https://counter.seku.su/cmoe?name=demo&theme=nix)
 
+##### mobius(mbs)
+![Nixie Tube](https://counter.seku.su/cmoe?name=demo&theme=mbs)
+
 </details>
 
 ## Usage
@@ -53,7 +56,7 @@ http://yourdomain/cmoe?name=yourname&reg=token
 ```
 ### 2. Refer
 ```
-http://yourdomain/cmoe?name=yourname(&theme=mb/mbh/gb/gbh/r34/nix)
+http://yourdomain/cmoe?name=yourname(&theme=mb/mbh/gb/gbh/r34/nix/mbs)
 ```
 That's all.
 ## Credits
