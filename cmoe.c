@@ -114,13 +114,14 @@ static void draw(int count, char* theme, uint32_t color) {
     if (theme) {
         cmp_and_set_type(mbh) else
         cmp_and_set_type(r34) else
+        cmp_and_set_type(r3b) else
         cmp_and_set_type(gb) else
         cmp_and_set_type(gbh) else
         cmp_and_set_type(asl) else
         cmp_and_set_type(nix) else
         cmp_and_set_type(mbs)
         isbigtiny = (
-            (theme_type == (char**)gb || theme_type == (char**)gbh) |
+            (theme_type == (char**)gb || theme_type == (char**)gbh || theme_type == (char**)r3b) |
             ((theme_type == (char**)nix || theme_type == (char**)mbs) << 1) |
             ((theme_type == (char**)mbs) << 2)
         );
