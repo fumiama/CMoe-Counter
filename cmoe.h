@@ -17,7 +17,7 @@ typedef struct counter_t counter_t;
 #define H404 "HTTP/1.0 404 NOT FOUND\r\nContent-Type: text/html\r\n\r\n<HTML><TITLE>Not Found</TITLE>\r\n<BODY><P>%s\r\n</BODY></HTML>\r\n"
 #define H500 "HTTP/1.0 500 Internal Server Error\r\nContent-Type: text/html\r\n\r\n<P>%s\r\n"
 const static char* types[] = {H400, H404, H500};
-const static uint8_t typel[] = {sizeof(H400)-2, sizeof(H404)-2, sizeof(H500)-2};
+const static uint8_t typel[] = {sizeof(H400)-3, sizeof(H404)-3, sizeof(H500)-3};
 enum errcode_enum_t {HTTP400, HTTP404, HTTP500};
 typedef enum errcode_enum_t errcode_enum_t;
 

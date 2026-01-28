@@ -57,13 +57,18 @@ static int del_user(FILE* fp, simple_pb_t* spb) {
     uint32_t cap = end - next;
     char *data = malloc(cap);
     if (data) {
-        if (fseek(fp, next, SEEK_SET)) return -3;
+        if (fseek(fp, next, SEEK_SET)) {
+            free(data);
+            return -3;
+        }
         if (fread(data, cap, 1, fp) == 1) {
             if (!ftruncate(fileno(fp), end - spb->real_len)){
-                if (fseek(fp, this, SEEK_SET)) return -4;
+                if (fseek(fp, this, SEEK_SET)) {
+                    free(data);
+                    return -4;
+                }
                 if (fwrite(data, cap, 1, fp) == 1) {
                     free(data);
-                    fflush(fp);
                     return 0;
                 }
             }
@@ -76,6 +81,7 @@ static int del_user(FILE* fp, simple_pb_t* spb) {
 static inline int add_user(char* name, uint32_t count, FILE* fp) {
     counter.count = count;
     strncpy(counter.name, name, COUNTER_NAME_LEN-1);
+    counter.name[COUNTER_NAME_LEN-1] = '\0';  // 确保字符串终止
     if (fseek(fp, 0, SEEK_END) < 0) return -2;
     return !set_pb(fp, items_len, sizeof(counter_t), &counter);
 }
@@ -144,14 +150,13 @@ static void draw(int count, char* theme, uint32_t color) {
         head = (char*)svg_small;
     }
     if (headers(get_content_len(isbigtiny, len_type, cntstr), "image/svg+xml")) {
-        write(1, "\0\0\0\0", 4);
         return;
     }
 
     const char* slot_front = (isbigtiny&FLAG_SVG)?svg_slot_front:img_slot_front;
     const char* slot_rear;
+    char rearbuf[sizeof(svg_slot_rear)-3+8];
     if (isbigtiny&FLAG_SVG) {
-        char rearbuf[sizeof(svg_slot_rear)-3+8];
         snprintf(rearbuf, sizeof(rearbuf), svg_slot_rear, color?color:SVG_DEFAULT_COLOR);
         slot_rear = rearbuf;
     } else slot_rear = img_slot_rear;
@@ -172,20 +177,19 @@ static void return_count(FILE* fp, char* name, char* theme, uint32_t color) {
         draw(123456789, theme, color);
         return;
     }
+    if (fseek(fp, 0, SEEK_SET) < 0) {
+        http_error(HTTP500, "File Seek Error.");
+        return;
+    }
     int ch, exist = 0, user_exist = 0;
     char buf[sizeof(simple_pb_t)+sizeof(counter_t)];
     while (has_next(fp, ch)) {
         simple_pb_t *spb = read_pb_into(fp, (simple_pb_t*)buf);
+        if (!spb) continue;
         counter_t *d = (counter_t *)spb->target;
         if (strcmp(name, d->name)) continue;
-        if (del_user(fp, spb)) {
-            http_error(HTTP500, "Unable to Delete Old Data.");
-            return;
-        }
-        if (add_user(d->name, d->count + 1, fp)) {
-            http_error(HTTP500, "Add User Error.");
-            return;
-        }
+        del_user(fp, spb);
+        add_user(d->name, d->count + 1, fp);
         draw(d->count, theme, color);
         return;
     }
@@ -196,10 +200,14 @@ static int name_exist(FILE* fp, char* name) {
     if (!strcmp(name, "demo")) {
         return 1;
     }
+    if (fseek(fp, 0, SEEK_SET) < 0) {
+        return 0;
+    }
     int ch, exist = 0;
     char buf[sizeof(simple_pb_t)+sizeof(counter_t)];
     while (has_next(fp, ch)) {
         simple_pb_t *spb = read_pb_into(fp, (simple_pb_t*)buf);
+        if (!spb) continue;
         counter_t *d = (counter_t *)spb->target;
         if (!strcmp(name, d->name)) return 1;
     }
@@ -243,49 +251,85 @@ int main(int argc, char **argv) {
     if (colors) {
         colors = get_arg(colors + 6);
         sscanf(colors, "%x", &color);
+        free(colors);
     }
     char* reg = strstr(QS, "reg=");
     int fd;
     if (!reg) {
         if ((fd=create_or_open(datfile)) < 0) {
+            free(name);
+            if (theme) free(theme);
             http_error(HTTP500, "Open File Error.");
             return -2;
         }
         if (flock(fd, LOCK_EX)) {
+            close(fd);
+            free(name);
+            if (theme) free(theme);
             http_error(HTTP500, "Lock File Error.");
             return -3;
         }
         fp = fdopen(fd, "rb+");
+        if (!fp) {
+            close(fd);
+            free(name);
+            if (theme) free(theme);
+            http_error(HTTP500, "Open File Error.");
+            return -6;
+        }
         return_count(fp, name, theme, color);
+        free(name);
+        if (theme) free(theme);
         return 0;
     }
     reg = get_arg(reg + 4);
     if (!reg) {
+        free(name);
+        if (theme) free(theme);
         http_error(HTTP400, "Null Register Token.");
         return 5;
     }
     if (strcmp(reg, token)) {
+        free(name);
+        if (theme) free(theme);
+        free(reg);
         http_error(HTTP400, "Token Error.");
         return 6;
     }
+    free(reg);  // 释放内存
     if ((fd=create_or_open(datfile)) < 0) {
+        free(name);
+        if (theme) free(theme);
         http_error(HTTP500, "Open File Error.");
         return -4;
     }
     if (flock(fd, LOCK_EX)) {
+        close(fd);
+        free(name);
+        if (theme) free(theme);
         http_error(HTTP500, "Lock File Error.");
         return -5;
     }
     fp = fdopen(fd, "rb+");
+    if (!fp) {
+        close(fd);
+        free(name);
+        if (theme) free(theme);
+        http_error(HTTP500, "Open File Error.");
+        return -7;
+    }
     if (name_exist(fp, name)) {
+        free(name);
+        if (theme) free(theme);
         http_error(HTTP400, "Name Exist.");
         return 7;
     }
     fseek(fp, 0, SEEK_END);
     add_user(name, 0, fp);
+    free(name);
+    if (theme) free(theme);
     char* msg = "<P>Success.\r\n";
     if (headers(strlen(msg), "text/html")) {
-        write(1, "\0\0\0\0", 4);
         return 8;
     }
     return write(1, msg, strlen(msg)) <= 0;
