@@ -337,4 +337,15 @@ int main(int argc, char **argv) {
 
 static void __attribute__((destructor)) defer_close_fp() {
     if (fp) fclose(fp);
+    char buf[4096];
+    fd_set rfds;
+    struct timeval tv;
+    int ret;
+    FD_ZERO(&rfds);
+    FD_SET(0, &rfds);
+    tv.tv_sec = 1;
+    tv.tv_usec = 0;
+    if (select(1, &rfds, NULL, NULL, &tv) > 0 && FD_ISSET(0, &rfds)) {
+        read(0, buf, sizeof(buf));
+    }
 }
