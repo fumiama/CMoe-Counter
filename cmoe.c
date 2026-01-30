@@ -11,7 +11,7 @@
 
 static uint32_t* items_len;
 static counter_t counter;
-static FILE* fp;
+static FILE* volatile fp;
 
 static char* datfile = "dat.sp";
 static char* token = "fumiama";
@@ -188,7 +188,10 @@ static void return_count(FILE* fp, char* name, char* theme, uint32_t color) {
         if (!spb) continue;
         counter_t *d = (counter_t *)spb->target;
         if (strcmp(name, d->name)) continue;
-        del_user(fp, spb);
+        if (del_user(fp, spb)) {
+            http_error(HTTP500, "Del User Error.");
+            return;
+        }
         add_user(d->name, d->count + 1, fp);
         draw(d->count, theme, color);
         return;
@@ -337,13 +340,14 @@ int main(int argc, char **argv) {
 
 static void __attribute__((destructor)) defer_close_fp() {
     if (fp) fclose(fp);
-    char buf[4096];
+    fflush(stdout);
+    char buf[256];
     fd_set rfds;
     struct timeval tv;
     int ret;
     FD_ZERO(&rfds);
     FD_SET(0, &rfds);
-    tv.tv_sec = 1;
+    tv.tv_sec = 2;
     tv.tv_usec = 0;
     if (select(1, &rfds, NULL, NULL, &tv) > 0 && FD_ISSET(0, &rfds)) {
         read(0, buf, sizeof(buf));
