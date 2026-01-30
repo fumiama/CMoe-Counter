@@ -5,6 +5,7 @@
 #include <string.h>
 #include <sys/file.h>
 #include <sys/uio.h>
+#include <sys/select.h>
 #include <unistd.h>
 
 #include "cmoe.h"
